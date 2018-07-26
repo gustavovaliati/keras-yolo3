@@ -46,4 +46,4 @@ with open(ARGS.annotation_file, 'r') as annot_f:
         Image.fromarray(fg_mask).save(os.path.join(destination_dir, '{}_mask.jpg'.format(file_name)))
         # Image.fromarray(np.invert(fg_mask.T)).save(os.path.join(destination_dir, '{}_bg.jpg'.format(file_name)))
 
-        sys.exit()
+        # sys.exit()
