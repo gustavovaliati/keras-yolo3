@@ -1,0 +1,4 @@
+annotation_path: train_pti01_6342imgs_v20180706193526_keras.txt
+log_dir: logs/000/
+classes_path: model_data/pti_classes.txt
+anchors_path: model_data/yolo_anchors.txt

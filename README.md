@@ -41,6 +41,10 @@ For Tiny YOLOv3, just do in a similar way. And modify model path and anchor path
     ...
     ```
 
+1.1 To generate the train.txt file from a pre-configured folder used in 
+darknet training, you can use the darknet_annotation.py script and change
+the WIDTH and HEIGHT parameters.
+
 2. Make sure you have run `python convert.py -w yolov3.cfg yolov3.weights model_data/yolo_weights.h5`  
     The file model_data/yolo_weights.h5 is used to load pretrained weights.
 

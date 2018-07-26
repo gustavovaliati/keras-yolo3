@@ -2,6 +2,32 @@
 Retrain the YOLO model for your own dataset.
 """
 
+import argparse
+import yaml
+from raven import Client
+
+ap = argparse.ArgumentParser()
+ap.add_argument("-g", "--config_path",
+                required=True,
+                default=None,
+                type=str,
+                help="The training configuration.")
+ap.add_argument("-m", "--memory",
+                required=False,
+                default=None,
+                type=float,
+                help="The amount of memory to be used by the framework in MB.")
+ARGS = ap.parse_args()
+
+TOTAL_GPU_MEMORY=121503
+if ARGS.memory:
+    import tensorflow as tf
+    from keras.backend.tensorflow_backend import set_session
+    config = tf.ConfigProto()
+    config.gpu_options.allow_growth = False
+    config.gpu_options.per_process_gpu_memory_fraction = TOTAL_GPU_MEMORY / ARGS.memory
+    set_session(tf.Session(config=config))
+
 import numpy as np
 import keras.backend as K
 from keras.layers import Input, Lambda
@@ -13,11 +39,20 @@ from yolo3.model import preprocess_true_boxes, yolo_body, tiny_yolo_body, yolo_l
 from yolo3.utils import get_random_data
 
 
-def _main():
-    annotation_path = 'train.txt'
-    log_dir = 'logs/000/'
-    classes_path = 'model_data/voc_classes.txt'
-    anchors_path = 'model_data/yolo_anchors.txt'
+
+
+
+def _main(train_config):
+    # annotation_path = 'train.txt'
+    # annotation_path = 'train_pti01_6342imgs_v20180706193526_keras.txt'
+    annotation_path = train_config.annotation_path
+    # log_dir = 'logs/000/'
+    log_dir = train_config.log_dir
+    # classes_path = 'model_data/voc_classes.txt'
+    # classes_path = 'model_data/pti_classes.txt'
+    classes_path = train_config.classes_path
+    # anchors_path = 'model_data/yolo_anchors.txt'
+    anchors_path = train_config.anchors_path
     class_names = get_classes(classes_path)
     num_classes = len(class_names)
     anchors = get_anchors(anchors_path)
@@ -60,7 +95,7 @@ def _main():
                 steps_per_epoch=max(1, num_train//batch_size),
                 validation_data=data_generator_wrapper(lines[num_train:], batch_size, input_shape, anchors, num_classes),
                 validation_steps=max(1, num_val//batch_size),
-                epochs=50,
+                epochs=1,
                 initial_epoch=0,
                 callbacks=[logging, checkpoint])
         model.save_weights(log_dir + 'trained_weights_stage_1.h5')
@@ -79,8 +114,8 @@ def _main():
             steps_per_epoch=max(1, num_train//batch_size),
             validation_data=data_generator_wrapper(lines[num_train:], batch_size, input_shape, anchors, num_classes),
             validation_steps=max(1, num_val//batch_size),
-            epochs=100,
-            initial_epoch=50,
+            epochs=2,
+            initial_epoch=1,
             callbacks=[logging, checkpoint, reduce_lr, early_stopping])
         model.save_weights(log_dir + 'trained_weights_final.h5')
 
@@ -187,4 +222,17 @@ def data_generator_wrapper(annotation_lines, batch_size, input_shape, anchors, n
     return data_generator(annotation_lines, batch_size, input_shape, anchors, num_classes)
 
 if __name__ == '__main__':
-    _main()
+
+    sentry_config = None
+    with open("grv/sentry-config.yml", 'r') as stream:
+        sentry_config = yaml.load(stream)
+    sentry = Client(sentry_config['sentry-url'])
+
+    train_config = None
+    with open(ARGS.config_path, 'r') as stream:
+        train_config = yaml.load(stream)
+
+    try:
+        _main(train_config)
+    except:
+        sentry.captureException()

@@ -8,6 +8,12 @@ import colorsys
 import os
 from timeit import default_timer as timer
 
+import tensorflow as tf
+from keras.backend.tensorflow_backend import set_session
+config = tf.ConfigProto()
+config.gpu_options.per_process_gpu_memory_fraction = 0.3
+set_session(tf.Session(config=config))
+
 import numpy as np
 from keras import backend as K
 from keras.models import load_model
