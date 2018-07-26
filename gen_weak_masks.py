@@ -34,16 +34,16 @@ with open(ARGS.annotation_file, 'r') as annot_f:
         destination_dir = os.path.join(ARGS.output_path, os.path.dirname(annot).replace('/home','home'))
         # print(destination_dir)
         os.makedirs(destination_dir, exist_ok=True)
-        fg_mask = np.zeros((IMG_WIDTH, IMG_HEIGHT), dtype=np.uint8)
+        fg_mask = np.zeros((IMG_HEIGHT,IMG_WIDTH), dtype=np.uint8)
         annot = annot.split(' ')
         img_path = annot[0]
-        bboxes = []
         for bbox in annot[1:]:
             x_min, y_min, x_max, y_max, class_id = list(map(int, bbox.split(',')))
-            # fg_mask[y_min:y_max, x_min:x_max] = 1
-            fg_mask[x_min:x_max, y_min:y_max] = 255
+            fg_mask[y_min:y_max, x_min:x_max] = 1
+            # fg_mask[y_min:y_max, x_min:x_max] = 255
 
-        Image.fromarray(fg_mask.T).save(os.path.join(destination_dir, 'fg.jpg'))
-        Image.fromarray(np.invert(fg_mask.T)).save(os.path.join(destination_dir, 'bg.jpg'))
+        file_name = os.path.basename(img_path).replace('.jpg','')
+        Image.fromarray(fg_mask).save(os.path.join(destination_dir, '{}_mask.jpg'.format(file_name)))
+        # Image.fromarray(np.invert(fg_mask.T)).save(os.path.join(destination_dir, '{}_bg.jpg'.format(file_name)))
 
-        # sys.exit()
+        sys.exit()
