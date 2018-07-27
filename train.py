@@ -19,13 +19,14 @@ ap.add_argument("-m", "--memory",
                 help="The amount of memory to be used by the framework in MB.")
 ARGS = ap.parse_args()
 
-TOTAL_GPU_MEMORY=121503
+TOTAL_GPU_MEMORY=12118
 if ARGS.memory:
     import tensorflow as tf
     from keras.backend.tensorflow_backend import set_session
     config = tf.ConfigProto()
-    config.gpu_options.allow_growth = False
-    config.gpu_options.per_process_gpu_memory_fraction = TOTAL_GPU_MEMORY / ARGS.memory
+    # config.gpu_options.allow_growth = True
+    config.gpu_options.allocator_type = 'BFC'
+    config.gpu_options.per_process_gpu_memory_fraction = ARGS.memory / TOTAL_GPU_MEMORY
     set_session(tf.Session(config=config))
 
 import numpy as np
@@ -45,14 +46,14 @@ from yolo3.utils import get_random_data
 def _main(train_config):
     # annotation_path = 'train.txt'
     # annotation_path = 'train_pti01_6342imgs_v20180706193526_keras.txt'
-    annotation_path = train_config.annotation_path
+    annotation_path = train_config['annotation_path']
     # log_dir = 'logs/000/'
-    log_dir = train_config.log_dir
+    log_dir = train_config['log_dir']
     # classes_path = 'model_data/voc_classes.txt'
     # classes_path = 'model_data/pti_classes.txt'
-    classes_path = train_config.classes_path
+    classes_path = train_config['classes_path']
     # anchors_path = 'model_data/yolo_anchors.txt'
-    anchors_path = train_config.anchors_path
+    anchors_path = train_config['anchors_path']
     class_names = get_classes(classes_path)
     num_classes = len(class_names)
     anchors = get_anchors(anchors_path)
@@ -84,12 +85,13 @@ def _main(train_config):
 
     # Train with frozen layers first, to get a stable loss.
     # Adjust num epochs to your dataset. This step is enough to obtain a not bad model.
-    if True:
+    if False:
         model.compile(optimizer=Adam(lr=1e-3), loss={
             # use custom yolo_loss Lambda layer.
             'yolo_loss': lambda y_true, y_pred: y_pred})
 
         batch_size = 32
+        # batch_size = 1
         print('Train on {} samples, val on {} samples, with batch size {}.'.format(num_train, num_val, batch_size))
         model.fit_generator(data_generator_wrapper(lines[:num_train], batch_size, input_shape, anchors, num_classes),
                 steps_per_epoch=max(1, num_train//batch_size),
@@ -108,7 +110,7 @@ def _main(train_config):
         model.compile(optimizer=Adam(lr=1e-4), loss={'yolo_loss': lambda y_true, y_pred: y_pred}) # recompile to apply the change
         print('Unfreeze all of the layers.')
 
-        batch_size = 32 # note that more GPU memory is required after unfreezing the body
+        batch_size = 4 # note that more GPU memory is required after unfreezing the body
         print('Train on {} samples, val on {} samples, with batch size {}.'.format(num_train, num_val, batch_size))
         model.fit_generator(data_generator_wrapper(lines[:num_train], batch_size, input_shape, anchors, num_classes),
             steps_per_epoch=max(1, num_train//batch_size),
@@ -231,7 +233,7 @@ if __name__ == '__main__':
     train_config = None
     with open(ARGS.config_path, 'r') as stream:
         train_config = yaml.load(stream)
-
+    print(train_config)
     try:
         _main(train_config)
     except:
