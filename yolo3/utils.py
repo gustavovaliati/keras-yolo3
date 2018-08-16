@@ -17,7 +17,7 @@ def compose(*funcs):
     else:
         raise ValueError('Composition of empty sequence not supported.')
 
-def letterbox_image(image, size):
+def letterbox_image(image, size, black_white=False):
     '''resize image with unchanged aspect ratio using padding'''
     iw, ih = image.size
     w, h = size
@@ -26,7 +26,10 @@ def letterbox_image(image, size):
     nh = int(ih*scale)
 
     image = image.resize((nw,nh), Image.BICUBIC)
-    new_image = Image.new('RGB', size, (128,128,128))
+    if black_white:
+        new_image = Image.new('L', size, (0))
+    else:
+        new_image = Image.new('RGB', size, (128,128,128))
     new_image.paste(image, ((w-nw)//2, (h-nh)//2))
     return new_image
 
@@ -40,6 +43,8 @@ def get_random_data(annotation_line, input_shape, random=True, max_boxes=20, jit
     iw, ih = image.size
     h, w = input_shape
     box = np.array([np.array(list(map(int,box.split(',')))) for box in line[1:]])
+    # seg_data = get_seg_data(annotation_line, img_shape=(ih,iw), input_shape=(h,w))
+    seg_data = get_seg_data(annotation_line, img_shape=(ih,iw), input_shape=(13,13))
 
     if not random:
         # resize image
@@ -64,7 +69,7 @@ def get_random_data(annotation_line, input_shape, random=True, max_boxes=20, jit
             box[:, [1,3]] = box[:, [1,3]]*scale + dy
             box_data[:len(box)] = box
 
-        return image_data, box_data
+        return image_data, box_data, seg_data
 
     # resize image
     new_ar = w/h * rand(1-jitter,1+jitter)/rand(1-jitter,1+jitter)
@@ -118,4 +123,34 @@ def get_random_data(annotation_line, input_shape, random=True, max_boxes=20, jit
         if len(box)>max_boxes: box = box[:max_boxes]
         box_data[:len(box)] = box
 
-    return image_data, box_data
+    return image_data, box_data, seg_data
+
+def get_seg_data(annotation_line, img_shape, input_shape):
+    ''' Returns the y_true matrix for the weak seg head for a specific annot image
+        Parameters
+        ----------
+        annotation_line: string, default annotation unit
+        img_shape: array-like, hw, original image dimensions
+        input_shape: array-like, hw, network input shape
+
+        Returns
+        -------
+        array: (h,w,2), 2 layers: one for foreground and the other for
+            background information about the annotated segmentated object.
+    '''
+
+
+    ih,iw = img_shape
+    h,w = input_shape
+
+    fg_mask = np.zeros((ih,iw), dtype=np.uint8)
+    annot = annotation_line.split(' ')
+    img_path = annot[0]
+    for bbox in annot[1:]:
+        x_min, y_min, x_max, y_max, class_id = list(map(int, bbox.split(',')))
+        fg_mask[y_min:y_max, x_min:x_max] = 1
+
+    fg_mask = letterbox_image(Image.fromarray(fg_mask,'L'), (w,h), black_white=True)
+    bg_mask = np.invert(fg_mask)
+
+    return np.dstack((fg_mask,bg_mask))

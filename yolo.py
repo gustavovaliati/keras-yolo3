@@ -20,7 +20,7 @@ from keras.models import load_model
 from keras.layers import Input
 from PIL import Image, ImageFont, ImageDraw
 
-from yolo3.model import yolo_eval, yolo_body, tiny_yolo_body
+from yolo3.model import yolo_eval, yolo_body, tiny_yolo_body, tiny_yolo_infusion_body
 from yolo3.utils import letterbox_image
 import os
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
@@ -29,9 +29,15 @@ gpu_num=1
 
 class YOLO(object):
     def __init__(self):
-        self.model_path = 'model_data/yolo.h5' # model path or trained weights path
-        self.anchors_path = 'model_data/yolo_anchors.txt'
-        self.classes_path = 'model_data/coco_classes.txt'
+        self.model_name = 'tiny_yolo_infusion'
+        # self.model_path = 'model_data/yolo.h5' # model path or trained weights path
+        # self.model_path = 'logs/000_5epochs/trained_weights_final.h5'
+        self.model_path = 'logs/000_5epochs_seg_1/trained_weights_final.h5'
+
+        # self.anchors_path = 'model_data/yolo_anchors.txt'
+        self.classes_path = 'model_data/pti_classes.txt'
+        # self.classes_path = 'model_data/coco_classes.txt'
+        self.anchors_path = 'model_data/tiny_yolo_anchors.txt'
         self.score = 0.3
         self.iou = 0.45
         self.class_names = self._get_class()
@@ -62,16 +68,20 @@ class YOLO(object):
         num_anchors = len(self.anchors)
         num_classes = len(self.class_names)
         is_tiny_version = num_anchors==6 # default setting
-        try:
-            self.yolo_model = load_model(model_path, compile=False)
-        except:
-            self.yolo_model = tiny_yolo_body(Input(shape=(None,None,3)), num_anchors//2, num_classes) \
-                if is_tiny_version else yolo_body(Input(shape=(None,None,3)), num_anchors//3, num_classes)
-            self.yolo_model.load_weights(self.model_path) # make sure model, anchors and classes match
+        if self.model_name == 'tiny_yolo_infusion':
+            self.yolo_model = tiny_yolo_infusion_body(Input(shape=(None,None,3)), num_anchors//2, num_classes)
+            self.yolo_model.load_weights(self.model_path)
         else:
-            assert self.yolo_model.layers[-1].output_shape[-1] == \
-                num_anchors/len(self.yolo_model.output) * (num_classes + 5), \
-                'Mismatch between model and given anchor and class sizes'
+            try:
+                self.yolo_model = load_model(model_path, compile=False)
+            except:
+                self.yolo_model = tiny_yolo_body(Input(shape=(None,None,3)), num_anchors//2, num_classes) \
+                    if is_tiny_version else yolo_body(Input(shape=(None,None,3)), num_anchors//3, num_classes)
+                self.yolo_model.load_weights(self.model_path) # make sure model, anchors and classes match
+            else:
+                assert self.yolo_model.layers[-1].output_shape[-1] == \
+                    num_anchors/len(self.yolo_model.output) * (num_classes + 5), \
+                    'Mismatch between model and given anchor and class sizes'
 
         print('{} model, anchors, and classes loaded.'.format(model_path))
 
@@ -92,7 +102,7 @@ class YOLO(object):
             self.yolo_model = multi_gpu_model(self.yolo_model, gpus=gpu_num)
         boxes, scores, classes = yolo_eval(self.yolo_model.output, self.anchors,
                 len(self.class_names), self.input_image_shape,
-                score_threshold=self.score, iou_threshold=self.iou)
+                score_threshold=self.score, iou_threshold=self.iou, model_name=self.model_name)
         return boxes, scores, classes
 
     def detect_image(self, image):
@@ -209,16 +219,17 @@ def detect_video(yolo, video_path, output_path=""):
 
 
 def detect_img(yolo):
-    while True:
-        img = input('Input image filename:')
-        try:
-            image = Image.open(img)
-        except:
-            print('Open Error! Try again!')
-            continue
-        else:
-            r_image = yolo.detect_image(image)
-            r_image.show()
+    # while True:
+        # img = input('Input image filename:')
+    try:
+        image = Image.open('/home/grvaliati/workspace/grv-darknet/data/person.jpg')
+    except:
+        print('Open Error! Try again!')
+        # continue
+    else:
+        r_image = yolo.detect_image(image)
+        # r_image.show()
+        r_image.save('img_seg_test.jpg')
     yolo.close_session()
 
 

@@ -66,7 +66,6 @@ def make_last_layers(x, num_filters, out_filters):
             DarknetConv2D(out_filters, (1,1)))(x)
     return x, y
 
-
 def yolo_body(inputs, num_anchors, num_classes):
     """Create YOLO_V3 model CNN body in Keras."""
     darknet = Model(inputs, darknet_body(inputs))
@@ -86,6 +85,54 @@ def yolo_body(inputs, num_anchors, num_classes):
 
     return Model(inputs, [y1,y2,y3])
 
+def tiny_yolo_infusion_body(inputs, num_anchors, num_classes):
+    '''Create Tiny YOLO_v3 model CNN body in keras, using a weak segmentation infusion layer.'''
+    x1 = compose(
+            DarknetConv2D_BN_Leaky(16, (3,3)),
+            MaxPooling2D(pool_size=(2,2), strides=(2,2), padding='same'),
+            DarknetConv2D_BN_Leaky(32, (3,3)),
+            MaxPooling2D(pool_size=(2,2), strides=(2,2), padding='same'),
+            DarknetConv2D_BN_Leaky(64, (3,3)),
+            MaxPooling2D(pool_size=(2,2), strides=(2,2), padding='same'),
+            DarknetConv2D_BN_Leaky(128, (3,3)),
+            MaxPooling2D(pool_size=(2,2), strides=(2,2), padding='same'),
+            DarknetConv2D_BN_Leaky(256, (3,3))
+            )(inputs)
+    x2 = compose(
+            MaxPooling2D(pool_size=(2,2), strides=(2,2), padding='same'),
+            DarknetConv2D_BN_Leaky(512, (3,3)),
+            MaxPooling2D(pool_size=(2,2), strides=(1,1), padding='same'),
+            DarknetConv2D_BN_Leaky(1024, (3,3))
+            )(x1)
+    x3 = DarknetConv2D_BN_Leaky(256, (1,1))(x2)
+
+    # weak segmentation
+    ## y_seg = DarknetConv2D_BN_Leaky(2, (1,1))(x2)
+    y_seg = Conv2D(2, (1,1))(x2) #Should we get from x3 instead?
+    y_seg = BatchNormalization()(y_seg) #do we need this?
+    y_seg = LeakyReLU(alpha=0.1,name="seg_output")(y_seg) #do we need this?
+
+    #we could upsample the 13x13 output to higher dimensions.
+    # or we could get a earlier layers where the dimensions are higher.
+
+    y1 = compose(
+            DarknetConv2D_BN_Leaky(512, (3,3)),
+            DarknetConv2D(num_anchors*(num_classes+5), (1,1), name='yolo_head_a_output')
+            )(x3)
+
+    x3 = compose(
+            DarknetConv2D_BN_Leaky(128, (1,1)),
+            UpSampling2D(2)
+            )(x3)
+    y2 = compose(
+            Concatenate(),
+            DarknetConv2D_BN_Leaky(256, (3,3)),
+            DarknetConv2D(num_anchors*(num_classes+5), (1,1), name='yolo_head_b_output')
+            )([x3,x1])
+
+    return Model(inputs=inputs, outputs=[y1,y2,y_seg])
+    # return Model(inputs=inputs, outputs=[y1,y2])
+
 def tiny_yolo_body(inputs, num_anchors, num_classes):
     '''Create Tiny YOLO_v3 model CNN body in keras.'''
     x1 = compose(
@@ -97,24 +144,29 @@ def tiny_yolo_body(inputs, num_anchors, num_classes):
             MaxPooling2D(pool_size=(2,2), strides=(2,2), padding='same'),
             DarknetConv2D_BN_Leaky(128, (3,3)),
             MaxPooling2D(pool_size=(2,2), strides=(2,2), padding='same'),
-            DarknetConv2D_BN_Leaky(256, (3,3)))(inputs)
+            DarknetConv2D_BN_Leaky(256, (3,3))
+            )(inputs)
     x2 = compose(
             MaxPooling2D(pool_size=(2,2), strides=(2,2), padding='same'),
             DarknetConv2D_BN_Leaky(512, (3,3)),
             MaxPooling2D(pool_size=(2,2), strides=(1,1), padding='same'),
             DarknetConv2D_BN_Leaky(1024, (3,3)),
-            DarknetConv2D_BN_Leaky(256, (1,1)))(x1)
+            DarknetConv2D_BN_Leaky(256, (1,1))
+            )(x1)
     y1 = compose(
             DarknetConv2D_BN_Leaky(512, (3,3)),
-            DarknetConv2D(num_anchors*(num_classes+5), (1,1)))(x2)
+            DarknetConv2D(num_anchors*(num_classes+5), (1,1))
+            )(x2)
 
     x2 = compose(
             DarknetConv2D_BN_Leaky(128, (1,1)),
-            UpSampling2D(2))(x2)
+            UpSampling2D(2)
+            )(x2)
     y2 = compose(
             Concatenate(),
             DarknetConv2D_BN_Leaky(256, (3,3)),
-            DarknetConv2D(num_anchors*(num_classes+5), (1,1)))([x2,x1])
+            DarknetConv2D(num_anchors*(num_classes+5), (1,1))
+            )([x2,x1])
 
     return Model(inputs, [y1,y2])
 
@@ -190,9 +242,13 @@ def yolo_eval(yolo_outputs,
               image_shape,
               max_boxes=20,
               score_threshold=.6,
-              iou_threshold=.5):
+              iou_threshold=.5,
+              model_name=None):
     """Evaluate YOLO model on given input and return filtered boxes."""
     num_layers = len(yolo_outputs)
+    if model_name == 'tiny_yolo_infusion':
+        num_layers -= 1
+
     anchor_mask = [[6,7,8], [3,4,5], [0,1,2]] if num_layers==3 else [[3,4,5], [1,2,3]] # default setting
     input_shape = K.shape(yolo_outputs[0])[1:3] * 32
     boxes = []
@@ -342,7 +398,7 @@ def box_iou(b1, b2):
     return iou
 
 
-def yolo_loss(args, anchors, num_classes, ignore_thresh=.5, print_loss=False):
+def yolo_loss(args, anchors, num_classes, ignore_thresh=.5, model_name=None, print_loss=False):
     '''Return yolo_loss tensor
 
     Parameters
@@ -359,8 +415,15 @@ def yolo_loss(args, anchors, num_classes, ignore_thresh=.5, print_loss=False):
 
     '''
     num_layers = len(anchors)//3 # default setting
-    yolo_outputs = args[:num_layers]
-    y_true = args[num_layers:]
+    num_outputs = num_layers
+    if model_name in ['tiny_yolo_infusion','yolo_infusion']:
+        #add segmentation output layer.
+        num_outputs = num_layers + 1
+
+    #args => head_a, head_b, seg, input_a, input_b
+
+    yolo_outputs = args[:num_outputs] #head_a, head_b, seg_output
+    y_true = args[num_outputs:] #input_a,input_b, input_seg
     anchor_mask = [[6,7,8], [3,4,5], [0,1,2]] if num_layers==3 else [[3,4,5], [1,2,3]]
     input_shape = K.cast(K.shape(yolo_outputs[0])[1:3] * 32, K.dtype(y_true[0]))
     grid_shapes = [K.cast(K.shape(yolo_outputs[l])[1:3], K.dtype(y_true[0])) for l in range(num_layers)]
@@ -409,4 +472,15 @@ def yolo_loss(args, anchors, num_classes, ignore_thresh=.5, print_loss=False):
         loss += xy_loss + wh_loss + confidence_loss + class_loss
         if print_loss:
             loss = tf.Print(loss, [loss, xy_loss, wh_loss, confidence_loss, class_loss, K.sum(ignore_mask)], message='loss: ')
+
+    if model_name in ['tiny_yolo_infusion','yolo_infusion']:
+        #calc seg loss
+        raw_true_seg = y_true[num_outputs-1] #seg is always the last output.
+        raw_pred_seg = yolo_outputs[num_outputs-1]
+        seg_loss = K.binary_crossentropy(raw_true_seg, raw_pred_seg, from_logits=True) #this will come from the network output, so should be from logits, right?
+        loss += seg_loss
+        print('seg_loss',seg_loss)
+        if print_loss:
+            loss = tf.Print(loss, [loss, seg_loss], message="loss (seg): ")
+
     return loss

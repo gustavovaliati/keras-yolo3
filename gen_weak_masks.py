@@ -7,6 +7,7 @@ from tqdm import tqdm
 
 from PIL import Image
 
+print('PS: the train.py is able to generate seg weak masks my itself. This script is not needed for training.')
 
 annotation_version = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
 
