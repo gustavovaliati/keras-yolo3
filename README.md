@@ -4,7 +4,9 @@
 
 ## Introduction
 
-A Keras implementation of YOLOv3 (Tensorflow backend) inspired by [allanzelener/YAD2K](https://github.com/allanzelener/YAD2K).
+This project is a fork from [qqwweee/keras-yolo3](https://github.com/qqwweee/keras-yolo3).
+
+**Warning**: This fork has not been exhaustively tested and bugs are expected.
 
 
 ---
@@ -12,20 +14,36 @@ A Keras implementation of YOLOv3 (Tensorflow backend) inspired by [allanzelener/
 ## Quick Start
 
 1. Download YOLOv3 weights from [YOLO website](http://pjreddie.com/darknet/yolo/).
-2. Convert the Darknet YOLO model to a Keras model.
-3. Run YOLO detection.
 
 ```
 wget https://pjreddie.com/media/files/yolov3.weights
-python convert.py yolov3.cfg yolov3.weights model_data/yolo.h5
-python yolo.py   OR   python yolo_video.py [video_path] [output_path(optional)]
 ```
 
-For Tiny YOLOv3, just do in a similar way. And modify model path and anchor path in yolo.py.
+2. Convert the Darknet YOLO model to a Keras model.
+3. Prepare your project config file in `yml`
 
----
+```
+train_path: my_train_set.txt
+test_path: my_test_set.txt
+classes_path: model_data/my_classes.txt
+anchors_path: model_data/my_anchors.txt
+model_name: any_name_for_my_model
+log_dir: logs/my-test/
+```
 
-4. MultiGPU usage is an optinal. Change the number of gpu and add gpu device id
+4. Training
+
+`python3 train.py ---config_path myprojects/test1-config.yml -m 5000`
+
+Ps: For training the `-m` parameter is available to set a limit to GPU memory in MB.
+
+5. Inference
+
+`python3 yolo.py ---config_path myprojects/test1-config.yml --weights logs/seg-000/ep004-loss-106.913-val_loss-114.463.h5`
+
+Ps: For inference the memory is limited in 30%.
+
+6. MultiGPU usage is an optional. Change the number of gpu and add gpu device id
 
 ## Training
 
@@ -41,7 +59,7 @@ For Tiny YOLOv3, just do in a similar way. And modify model path and anchor path
     ...
     ```
 
-1.1 To generate the train.txt file from a pre-configured folder used in 
+1.1 To generate the train.txt file from a pre-configured folder used in
 darknet training, you can use the darknet_annotation.py script and change
 the WIDTH and HEIGHT parameters.
 
@@ -59,6 +77,21 @@ If you want to use original pretrained weights for YOLOv3:
     3. `python convert.py -w darknet53.cfg darknet53.weights model_data/darknet53_weights.h5`  
     4. use model_data/darknet53_weights.h5 in train.py
 
+## Prediction
+
+The `yolo.py` script has been modified and now outputs the `inference_output_<version>.txt` file every time it is ran. The `<version>` is the current datetime and exists to create a simple inference history.
+
+1. Prediction output format.  
+    One row for one image;  
+    Row format: `image_file_path prediction1 predicion2 ... predictionN`;  
+    Prediction format: `x_min,y_min,x_max,y_max,class_id,confidence_score` (no space).  
+    Here is an example:
+    ```
+    path/to/img1.jpg 50,100,150,200,0,0.9876 30,50,200,120,3,0.3211
+    path/to/img2.jpg
+    path/to/img3.jpg 120,300,250,600,2,0.8319
+    ...
+    ```
 ---
 
 ## Some issues to know

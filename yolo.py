@@ -209,11 +209,6 @@ class YOLO(object):
         if verbose:
             print('Executed in: ', end - start)
 
-        '''
-        img_path x_min,y_min,x_max,y_max,obj_score
-        path/to/img1.jpg 50,100,150,200,0 30,50,200,120,3
-        path/to/img2.jpg 120,300,250,600,2
-        '''
         output_file.write('{}{}\n'.format(image.filename, detections_string))
 
         return image
