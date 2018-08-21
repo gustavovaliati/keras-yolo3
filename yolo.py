@@ -7,6 +7,8 @@ Run a YOLO_v3 style detection model on test images.
 import colorsys
 import os
 from timeit import default_timer as timer
+from tqdm import tqdm
+
 
 import tensorflow as tf
 from keras.backend.tensorflow_backend import set_session
@@ -22,22 +24,48 @@ from PIL import Image, ImageFont, ImageDraw
 
 from yolo3.model import yolo_eval, yolo_body, tiny_yolo_body, tiny_yolo_infusion_body
 from yolo3.utils import letterbox_image
-import os
+import os,datetime
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 from keras.utils import multi_gpu_model
 gpu_num=1
 
+import argparse
+import yaml
+ap = argparse.ArgumentParser()
+ap.add_argument("-g", "--config_path",
+                required=True,
+                default=None,
+                type=str,
+                help="The training configuration.")
+ap.add_argument("-w", "--weights",
+                required=False,
+                default=None,
+                type=str,
+                help="The weights to load the model. If not provided the trained_weights_final.h5 will be used from the logs dir.")
+ARGS = ap.parse_args()
+
+train_config = None
+with open(ARGS.config_path, 'r') as stream:
+    train_config = yaml.load(stream)
+print(train_config)
+
+output_version = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
+output_file_path = 'inference_output_{}.txt'.format(output_version)
+
 class YOLO(object):
     def __init__(self):
-        self.model_name = 'tiny_yolo_infusion'
+        self.model_name = train_config['model_name']
         # self.model_path = 'model_data/yolo.h5' # model path or trained weights path
         # self.model_path = 'logs/000_5epochs/trained_weights_final.h5'
-        self.model_path = 'logs/000_5epochs_seg_1/trained_weights_final.h5'
+        if not ARGS.weights:
+            self.model_path = os.path.join(train_config['log_dir'] , 'trained_weights_final.h5')
+        else:
+            self.model_path = ARGS.weights
 
         # self.anchors_path = 'model_data/yolo_anchors.txt'
-        self.classes_path = 'model_data/pti_classes.txt'
+        self.classes_path = train_config['classes_path']
         # self.classes_path = 'model_data/coco_classes.txt'
-        self.anchors_path = 'model_data/tiny_yolo_anchors.txt'
+        self.anchors_path = train_config['anchors_path']
         self.score = 0.3
         self.iou = 0.45
         self.class_names = self._get_class()
@@ -105,7 +133,7 @@ class YOLO(object):
                 score_threshold=self.score, iou_threshold=self.iou, model_name=self.model_name)
         return boxes, scores, classes
 
-    def detect_image(self, image):
+    def detect_image(self, image, verbose=False, draw=False, output_file=None):
         start = timer()
 
         if self.model_image_size != (None, None):
@@ -118,7 +146,7 @@ class YOLO(object):
             boxed_image = letterbox_image(image, new_image_size)
         image_data = np.array(boxed_image, dtype='float32')
 
-        print(image_data.shape)
+        # print(image_data.shape)
         image_data /= 255.
         image_data = np.expand_dims(image_data, 0)  # Add batch dimension.
 
@@ -130,46 +158,64 @@ class YOLO(object):
                 K.learning_phase(): 0
             })
 
-        print('Found {} boxes for {}'.format(len(out_boxes), 'img'))
+        if verbose:
+            print('Found {} boxes for {}'.format(len(out_boxes), 'img'))
 
-        font = ImageFont.truetype(font='font/FiraMono-Medium.otf',
-                    size=np.floor(3e-2 * image.size[1] + 0.5).astype('int32'))
-        thickness = (image.size[0] + image.size[1]) // 300
+        if draw:
+            font = ImageFont.truetype(font='font/FiraMono-Medium.otf',
+                        size=np.floor(3e-2 * image.size[1] + 0.5).astype('int32'))
+            thickness = (image.size[0] + image.size[1]) // 300
 
+        detections_string = ''
         for i, c in reversed(list(enumerate(out_classes))):
             predicted_class = self.class_names[c]
             box = out_boxes[i]
             score = out_scores[i]
 
-            label = '{} {:.2f}'.format(predicted_class, score)
-            draw = ImageDraw.Draw(image)
-            label_size = draw.textsize(label, font)
+            if draw:
+                label = '{} {:.2f}'.format(predicted_class, score)
+                draw = ImageDraw.Draw(image)
+                label_size = draw.textsize(label, font)
 
             top, left, bottom, right = box
             top = max(0, np.floor(top + 0.5).astype('int32'))
             left = max(0, np.floor(left + 0.5).astype('int32'))
             bottom = min(image.size[1], np.floor(bottom + 0.5).astype('int32'))
             right = min(image.size[0], np.floor(right + 0.5).astype('int32'))
-            print(label, (left, top), (right, bottom))
+            if verbose:
+                print(label, (left, top), (right, bottom))
 
-            if top - label_size[1] >= 0:
-                text_origin = np.array([left, top - label_size[1]])
-            else:
-                text_origin = np.array([left, top + 1])
+            if draw:
+                if top - label_size[1] >= 0:
+                    text_origin = np.array([left, top - label_size[1]])
+                else:
+                    text_origin = np.array([left, top + 1])
 
-            # My kingdom for a good redistributable image drawing library.
-            for i in range(thickness):
+                    # My kingdom for a good redistributable image drawing library.
+                for i in range(thickness):
+                    draw.rectangle(
+                        [left + i, top + i, right - i, bottom - i],
+                        outline=self.colors[c])
                 draw.rectangle(
-                    [left + i, top + i, right - i, bottom - i],
-                    outline=self.colors[c])
-            draw.rectangle(
-                [tuple(text_origin), tuple(text_origin + label_size)],
-                fill=self.colors[c])
-            draw.text(text_origin, label, fill=(0, 0, 0), font=font)
-            del draw
+                    [tuple(text_origin), tuple(text_origin + label_size)],
+                    fill=self.colors[c])
+                draw.text(text_origin, label, fill=(0, 0, 0), font=font)
+                del draw
+
+            # <left> <top> <right> <bottom> <class_id> <confidence>
+            detections_string += ' {},{},{},{},{},{}'.format(left, top, right, bottom, c, score)
 
         end = timer()
-        print(end - start)
+        if verbose:
+            print('Executed in: ', end - start)
+
+        '''
+        img_path x_min,y_min,x_max,y_max,obj_score
+        path/to/img1.jpg 50,100,150,200,0 30,50,200,120,3
+        path/to/img2.jpg 120,300,250,600,2
+        '''
+        output_file.write('{}{}\n'.format(image.filename, detections_string))
+
         return image
 
     def close_session(self):
@@ -219,20 +265,26 @@ def detect_video(yolo, video_path, output_path=""):
 
 
 def detect_img(yolo):
-    # while True:
-        # img = input('Input image filename:')
-    try:
-        image = Image.open('/home/grvaliati/workspace/grv-darknet/data/person.jpg')
-    except:
-        print('Open Error! Try again!')
-        # continue
-    else:
-        r_image = yolo.detect_image(image)
-        # r_image.show()
-        r_image.save('img_seg_test.jpg')
+
+    test_annotations = train_config['test_path']
+    with open(test_annotations,'r') as annot_f:
+        with open(output_file_path, 'w') as output_f:
+            for annotation in tqdm(annot_f):
+                try:
+                    # print(annotation)
+                    # image = Image.open('/home/grvaliati/workspace/datasets/pti/PTI01/C_BLC03-02/0/18/01/08/16/57/18/00150-capture.jpg')
+                    img_path = annotation.split(' ')[0].strip()
+                    # print('img_path',img_path)
+                    image = Image.open(img_path)
+                except Exception as e:
+                    print('Error while opening file.', e)
+                    break;
+                else:
+                    r_image = yolo.detect_image(image,output_file=output_f)
+                    # r_image.show()
+                    # r_image.save('img_seg_test.jpg')
+
     yolo.close_session()
-
-
 
 if __name__ == '__main__':
     detect_img(YOLO())

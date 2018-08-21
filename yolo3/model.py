@@ -106,11 +106,23 @@ def tiny_yolo_infusion_body(inputs, num_anchors, num_classes):
             )(x1)
     x3 = DarknetConv2D_BN_Leaky(256, (1,1))(x2)
 
-    # weak segmentation
-    ## y_seg = DarknetConv2D_BN_Leaky(2, (1,1))(x2)
-    y_seg = Conv2D(2, (1,1))(x2) #Should we get from x3 instead?
+    ## weak segmentation
+
+    ## test1 : manual & default layers combination -> seems ok.
+
+    # y_seg = Conv2D(2, (1,1))(x2) #Should we get from x3 instead?
+    # y_seg = BatchNormalization()(y_seg) #do we need this?
+    # y_seg = LeakyReLU(alpha=0.1,name="seg_output")(y_seg) #do we need this?
+
+    ## test2 : manual & defined yolo layer parameters -> it's a mess on tensorboard graph.
+
+    y_seg = Conv2D(2, (1,1), use_bias=False, padding='same', kernel_regularizer=l2(5e-4) )(x2) #Should we get from x3 instead?
     y_seg = BatchNormalization()(y_seg) #do we need this?
     y_seg = LeakyReLU(alpha=0.1,name="seg_output")(y_seg) #do we need this?
+
+    ## test3 : just DarknetConv2D layer & yolo layer parameters -> not tested yet.
+    ## y_seg = DarknetConv2D(2, (1,1),name="seg_output")(x2)
+
 
     #we could upsample the 13x13 output to higher dimensions.
     # or we could get a earlier layers where the dimensions are higher.

@@ -1,0 +1,153 @@
+################################################################################
+inference results
+################################################################################
+
+
+logs/000_5epochs_seg_1:
+----------------------
+
+logs/000_5epochs_seg_1/ep003-loss-83.773-val_loss-77.868.h5 model, anchors, and classes loaded.
+(416, 416, 3)
+Found 0 boxes for img
+2.5651176651008427
+
+logs/000_5epochs_seg_1/trained_weights_final.h5 model, anchors, and classes loaded.
+(416, 416, 3)
+Found 1 boxes for img
+person 0.77 (174, 58) (271, 349)
+1.7913756780326366
+
+
+logs/seg-001/ -> mesmo que logs/seg-000/ porém salvando todos epochs.
+------------
+
+logs/seg-001/ep001-loss412.002-val_loss169.110.h5 model, anchors, and classes loaded.
+(416, 416, 3)
+Found 0 boxes for img
+
+logs/seg-001/ep002-loss72.045-val_loss51.413.h5 model, anchors, and classes loaded.
+(416, 416, 3)
+Found 0 boxes for img
+2.5822173026390374
+
+logs/seg-001/ep003-loss18.513-val_loss1.950.h5 model, anchors, and classes loaded.
+(416, 416, 3)
+Found 0 boxes for img
+1.8511119349859655
+
+
+
+################################################################################
+training output
+################################################################################
+
+
+logs/seg-000/
+------------
+ep003-loss30.173-val_loss18.132.h5    ep012-loss-58.162-val_loss-54.848.h5  ep030-loss-76.074-val_loss-79.365.h5   events.out.tfevents.1534461681.tesla2
+ep006-loss-24.290-val_loss-21.278.h5  ep015-loss-68.950-val_loss-63.880.h5  events.out.tfevents.1534461459.tesla2  events.out.tfevents.1534461786.tesla2
+ep009-loss-45.405-val_loss-42.175.h5  ep018-loss-74.661-val_loss-78.200.h5  events.out.tfevents.1534461519.tesla2  trained_weights_final.h5
+
+
+
+
+
+
+# 1 epoch
+=========
+Train on 5730 samples, val on 636 samples, with batch size 4.                                                                                                 [1767/1804]
+Epoch 2/2
+1432/1432 [==============================] - 973s 679ms/step - loss: 144.6896 - val_loss: 35.0440
+grvaliati@tesla2:~/workspace/grv-keras-yolo3$ mv logs/000/ logs/000_1epoch
+
+# 5 epochs
+==========
+Train on 5730 samples, val on 636 samples, with batch size 4.
+Epoch 1/5
+1432/1432 [==============================] - 875s 611ms/step - loss: 130.2951 - val_loss: 32.7243
+Epoch 2/5
+1432/1432 [==============================] - 883s 617ms/step - loss: 25.7563 - val_loss: 22.1203
+Epoch 3/5
+1432/1432 [==============================] - 885s 618ms/step - loss: 19.9167 - val_loss: 19.7630
+Epoch 4/5
+1432/1432 [==============================] - 879s 614ms/step - loss: 17.9466 - val_loss: 17.0520
+Epoch 5/5
+1432/1432 [==============================] - 894s 624ms/step - loss: 16.5465 - val_loss: 15.5871
+
+# 50 epochs
+===========
+Train on 5730 samples, val on 636 samples, with batch size 32.                                                                                                   [40/351]
+Epoch 1/50
+2018-08-16 20:23:21.889748: W tensorflow/core/common_runtime/bfc_allocator.cc:217] Allocator (GPU_0_bfc) ran out of memory trying to allocate 2.32GiB. The caller indicat
+es that this is not a failure, but may mean that there could be performance gains if more memory is available.
+179/179 [==============================] - 1018s 6s/step - loss: 452.6340 - val_loss: 163.2669
+Epoch 2/50
+179/179 [==============================] - 1020s 6s/step - loss: 95.9292 - val_loss: 47.9100
+Epoch 3/50
+179/179 [==============================] - 1009s 6s/step - loss: 30.1728 - val_loss: 18.1323
+Epoch 4/50
+179/179 [==============================] - 992s 6s/step - loss: 0.9193 - val_loss: 0.7596
+Epoch 5/50
+179/179 [==============================] - 1004s 6s/step - loss: -15.4768 - val_loss: -23.4064
+Epoch 6/50
+179/179 [==============================] - 1023s 6s/step - loss: -24.2898 - val_loss: -21.2778
+Epoch 7/50
+179/179 [==============================] - 1017s 6s/step - loss: -33.9050 - val_loss: -28.2845
+Epoch 8/50
+179/179 [==============================] - 882s 5s/step - loss: -40.3585 - val_loss: -36.2733
+Epoch 9/50
+179/179 [==============================] - 867s 5s/step - loss: -45.4054 - val_loss: -42.1749
+Epoch 10/50
+179/179 [==============================] - 863s 5s/step - loss: -49.8549 - val_loss: -56.7414
+Epoch 11/50
+179/179 [==============================] - 868s 5s/step - loss: -54.5895 - val_loss: -48.5926
+Epoch 12/50
+179/179 [==============================] - 873s 5s/step - loss: -58.1622 - val_loss: -54.8482
+Epoch 13/50
+179/179 [==============================] - 877s 5s/step - loss: -62.2103 - val_loss: -77.3995
+Epoch 14/50
+179/179 [==============================] - 873s 5s/step - loss: -65.5853 - val_loss: -53.5969
+Epoch 15/50
+179/179 [==============================] - 871s 5s/step - loss: -68.9495 - val_loss: -63.8796
+Epoch 16/50
+179/179 [==============================] - 883s 5s/step - loss: -72.2241 - val_loss: -75.2687
+Epoch 00016: ReduceLROnPlateau reducing learning rate to 9.999999747378752e-06.
+Epoch 17/50
+179/179 [==============================] - 878s 5s/step - loss: -74.2127 - val_loss: -74.1105
+Epoch 18/50
+179/179 [==============================] - 871s 5s/step - loss: -74.6609 - val_loss: -78.2001
+Epoch 19/50
+179/179 [==============================] - 871s 5s/step - loss: -75.0912 - val_loss: -68.5613
+Epoch 20/50
+179/179 [==============================] - 880s 5s/step - loss: -75.4890 - val_loss: -75.0996
+Epoch 21/50
+179/179 [==============================] - 877s 5s/step - loss: -75.8178 - val_loss: -70.6003
+Epoch 00021: ReduceLROnPlateau reducing learning rate to 9.999999747378752e-07.
+Epoch 22/50
+179/179 [==============================] - 878s 5s/step - loss: -76.0817 - val_loss: -76.5421
+Epoch 23/50
+179/179 [==============================] - 882s 5s/step - loss: -75.9997 - val_loss: -79.8723
+Epoch 24/50
+179/179 [==============================] - 884s 5s/step - loss: -75.8511 - val_loss: -75.2890
+Epoch 25/50
+179/179 [==============================] - 885s 5s/step - loss: -75.9049 - val_loss: -79.2764
+Epoch 26/50
+179/179 [==============================] - 879s 5s/step - loss: -76.2480 - val_loss: -74.1617
+Epoch 00026: ReduceLROnPlateau reducing learning rate to 9.999999974752428e-08.
+Epoch 27/50
+179/179 [==============================] - 891s 5s/step - loss: -76.2481 - val_loss: -75.9800
+Epoch 28/50
+179/179 [==============================] - 876s 5s/step - loss: -76.1751 - val_loss: -75.3397
+Epoch 29/50
+179/179 [==============================] - 881s 5s/step - loss: -76.0934 - val_loss: -76.3899
+Epoch 00029: ReduceLROnPlateau reducing learning rate to 1.0000000116860975e-08.
+Epoch 30/50
+179/179 [==============================] - 882s 5s/step - loss: -76.0737 - val_loss: -79.3646
+Epoch 31/50
+179/179 [==============================] - 883s 5s/step - loss: -76.1460 - val_loss: -76.0375
+Epoch 32/50
+179/179 [==============================] - 885s 5s/step - loss: -76.2287 - val_loss: -70.6006
+Epoch 00032: ReduceLROnPlateau reducing learning rate to 9.999999939225292e-10.
+Epoch 33/50
+179/179 [==============================] - 892s 5s/step - loss: -76.1598 - val_loss: -73.0281
+Epoch 00033: early stopping

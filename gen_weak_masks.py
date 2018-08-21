@@ -32,7 +32,11 @@ with open(ARGS.annotation_file, 'r') as annot_f:
     for annot in tqdm(annot_f):
         # print(annot)
         # annot = 'img_path x_min,y_min,x_max,y_max,class_id x_min,y_min,x_max,y_max,class_id ...'
-        destination_dir = os.path.join(ARGS.output_path, os.path.dirname(annot).replace('/home','home'))
+        annotation_dir_name = os.path.dirname(annot)
+        #remove the root path to enable to path.join.
+        if annotation_dir_name.startswith('/'):
+            annotation_dir_name.replace('/','',1)
+        destination_dir = os.path.join(ARGS.output_path, annotation_dir_name)
         # print(destination_dir)
         os.makedirs(destination_dir, exist_ok=True)
         fg_mask = np.zeros((IMG_HEIGHT,IMG_WIDTH), dtype=np.uint8)

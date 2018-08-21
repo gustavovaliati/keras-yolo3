@@ -1,0 +1,118 @@
+################################################################################
+inference results
+################################################################################
+
+logs/default-tiny-scratch-000/
+----------------------------
+ep003-loss111.877-val_loss96.389.h5  ep018-loss20.137-val_loss20.534.h5  ep033-loss15.081-val_loss14.630.h5     events.out.tfevents.1534462744.tesla2
+ep006-loss48.152-val_loss44.985.h5   ep021-loss18.576-val_loss18.155.h5  ep036-loss14.392-val_loss14.354.h5     trained_weights_final.h5
+ep009-loss32.603-val_loss31.768.h5   ep024-loss17.431-val_loss17.217.h5  ep042-loss13.624-val_loss14.021.h5
+ep012-loss26.082-val_loss25.784.h5   ep027-loss16.472-val_loss16.881.h5  ep045-loss13.545-val_loss13.049.h5
+ep015-loss22.310-val_loss22.187.h5   ep030-loss15.592-val_loss16.176.h5  events.out.tfevents.1534462385.tesla2
+
+logs/default-tiny-scratch-000/ep003-loss111.877-val_loss96.389.h5 model, anchors, and classes loaded.
+Found 0 boxes for img
+logs/default-tiny-scratch-000/trained_weights_final.h5 model, anchors, and classes loaded.
+Found 0 boxes for img
+
+################################################################################
+training output
+################################################################################
+
+
+Train on 5730 samples, val on 636 samples, with batch size 32.
+Epoch 1/50
+2018-08-16 20:39:18.563921: W tensorflow/core/common_runtime/bfc_allocator.cc:217] Allocator (GPU_0_bfc) ran out of memory trying to allocate 2.32GiB. The caller indicat
+es that this is not a failure, but may mean that there could be performance gains if more memory is available.
+179/179 [==============================] - 1263s 7s/step - loss: 612.5628 - val_loss: 318.8899
+Epoch 2/50
+179/179 [==============================] - 1180s 7s/step - loss: 185.4757 - val_loss: 162.5776
+Epoch 3/50
+179/179 [==============================] - 1163s 6s/step - loss: 111.8770 - val_loss: 96.3895
+Epoch 4/50
+179/179 [==============================] - 1187s 7s/step - loss: 78.0295 - val_loss: 66.5473
+Epoch 5/50
+179/179 [==============================] - 1191s 7s/step - loss: 60.0642 - val_loss: 53.1277
+Epoch 6/50
+179/179 [==============================] - 926s 5s/step - loss: 48.1520 - val_loss: 44.9848
+Epoch 7/50
+179/179 [==============================] - 912s 5s/step - loss: 41.4885 - val_loss: 38.2286
+Epoch 8/50
+179/179 [==============================] - 923s 5s/step - loss: 36.2966 - val_loss: 34.9811
+Epoch 9/50
+179/179 [==============================] - 923s 5s/step - loss: 32.6030 - val_loss: 31.7679
+Epoch 10/50
+179/179 [==============================] - 919s 5s/step - loss: 29.9111 - val_loss: 28.6976
+Epoch 11/50
+179/179 [==============================] - 938s 5s/step - loss: 27.6456 - val_loss: 27.2554
+Epoch 12/50
+179/179 [==============================] - 950s 5s/step - loss: 26.0817 - val_loss: 25.7836
+Epoch 13/50
+179/179 [==============================] - 972s 5s/step - loss: 24.4235 - val_loss: 24.8859
+Epoch 14/50
+179/179 [==============================] - 921s 5s/step - loss: 23.7299 - val_loss: 22.6890
+Epoch 15/50
+179/179 [==============================] - 938s 5s/step - loss: 22.3095 - val_loss: 22.1873
+Epoch 16/50
+179/179 [==============================] - 919s 5s/step - loss: 21.5214 - val_loss: 20.6255
+Epoch 17/50
+179/179 [==============================] - 930s 5s/step - loss: 20.7879 - val_loss: 19.7878
+Epoch 18/50                                                                                                                                                      [23/207]
+179/179 [==============================] - 930s 5s/step - loss: 20.1368 - val_loss: 20.5342
+Epoch 19/50
+179/179 [==============================] - 931s 5s/step - loss: 19.4688 - val_loss: 18.2545
+Epoch 20/50
+179/179 [==============================] - 941s 5s/step - loss: 18.6156 - val_loss: 20.3662
+Epoch 21/50
+179/179 [==============================] - 933s 5s/step - loss: 18.5760 - val_loss: 18.1553
+Epoch 22/50
+179/179 [==============================] - 922s 5s/step - loss: 17.9120 - val_loss: 17.8305
+Epoch 23/50
+179/179 [==============================] - 919s 5s/step - loss: 17.5752 - val_loss: 17.8563
+Epoch 24/50
+179/179 [==============================] - 916s 5s/step - loss: 17.4309 - val_loss: 17.2168
+Epoch 25/50
+179/179 [==============================] - 912s 5s/step - loss: 16.9412 - val_loss: 16.7556
+Epoch 26/50
+179/179 [==============================] - 915s 5s/step - loss: 16.7367 - val_loss: 17.0675
+Epoch 27/50
+179/179 [==============================] - 950s 5s/step - loss: 16.4723 - val_loss: 16.8813
+Epoch 28/50
+179/179 [==============================] - 918s 5s/step - loss: 16.2102 - val_loss: 16.2185
+Epoch 29/50
+179/179 [==============================] - 912s 5s/step - loss: 15.9051 - val_loss: 15.8248
+Epoch 30/50
+179/179 [==============================] - 900s 5s/step - loss: 15.5915 - val_loss: 16.1758
+Epoch 31/50
+179/179 [==============================] - 855s 5s/step - loss: 15.4726 - val_loss: 15.2381
+Epoch 32/50
+179/179 [==============================] - 852s 5s/step - loss: 15.4696 - val_loss: 15.8537
+Epoch 33/50
+179/179 [==============================] - 865s 5s/step - loss: 15.0806 - val_loss: 14.6302
+Epoch 34/50
+179/179 [==============================] - 851s 5s/step - loss: 14.9222 - val_loss: 15.2453
+Epoch 35/50
+179/179 [==============================] - 859s 5s/step - loss: 14.8439 - val_loss: 14.8760
+Epoch 36/50
+179/179 [==============================] - 851s 5s/step - loss: 14.3923 - val_loss: 14.3541
+Epoch 37/50
+179/179 [==============================] - 877s 5s/step - loss: 14.4343 - val_loss: 14.5451
+Epoch 38/50
+179/179 [==============================] - 850s 5s/step - loss: 14.2633 - val_loss: 14.9915
+Epoch 39/50
+179/179 [==============================] - 846s 5s/step - loss: 14.2970 - val_loss: 14.6472
+Epoch 00039: ReduceLROnPlateau reducing learning rate to 9.999999747378752e-06.
+Epoch 40/50
+179/179 [==============================] - 829s 5s/step - loss: 13.8412 - val_loss: 13.1887
+Epoch 41/50
+179/179 [==============================] - 825s 5s/step - loss: 13.6827 - val_loss: 14.0781
+Epoch 42/50
+179/179 [==============================] - 826s 5s/step - loss: 13.6240 - val_loss: 14.0212
+Epoch 43/50
+179/179 [==============================] - 826s 5s/step - loss: 13.7206 - val_loss: 12.8098
+Epoch 44/50
+179/179 [==============================] - 831s 5s/step - loss: 13.2998 - val_loss: 14.1148
+Epoch 45/50
+179/179 [==============================] - 823s 5s/step - loss: 13.5454 - val_loss: 13.0493
+Epoch 46/50
+179/179 [==============================] - 827s 5s/step - loss: 13.4162 - val_loss: 13.9498

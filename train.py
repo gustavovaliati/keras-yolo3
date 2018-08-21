@@ -46,7 +46,7 @@ from yolo3.utils import get_random_data
 def _main(train_config):
     # annotation_path = 'train.txt'
     # annotation_path = 'train_pti01_6342imgs_v20180706193526_keras.txt'
-    annotation_path = train_config['annotation_path']
+    annotation_path = train_config['train_path']
     # log_dir = 'logs/000/'
     log_dir = train_config['log_dir']
     # classes_path = 'model_data/voc_classes.txt'
@@ -73,7 +73,7 @@ def _main(train_config):
 
     logging = TensorBoard(log_dir=log_dir)
     checkpoint = ModelCheckpoint(log_dir + 'ep{epoch:03d}-loss{loss:.3f}-val_loss{val_loss:.3f}.h5',
-        monitor='val_loss', save_weights_only=True, save_best_only=True, period=3)
+        monitor='val_loss', save_weights_only=True, save_best_only=True, period=1)
     reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=3, verbose=1)
     early_stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=10, verbose=1)
 
@@ -117,7 +117,7 @@ def _main(train_config):
             }) # recompile to apply the change
         # print('Unfreeze all of the layers.')
 
-        batch_size = 32 # note that more GPU memory is required after unfreezing the body
+        batch_size = 4 # note that more GPU memory is required after unfreezing the body
         print('Train on {} samples, val on {} samples, with batch size {}.'.format(num_train, num_val, batch_size))
         model.fit_generator(
             data_generator_wrapper(lines[:num_train], batch_size, input_shape, anchors, num_classes, model_name),
