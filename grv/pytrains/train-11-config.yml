@@ -3,4 +3,4 @@ test_path: test_pti01_1585imgs_v20180706193526_keras.txt
 classes_path: model_data/pti_classes.txt
 anchors_path: model_data/tiny_yolo_anchors.txt
 model_name: tiny_yolo_infusion
-log_dir: logs/seg-000/
+log_dir: logs/seg-004/
