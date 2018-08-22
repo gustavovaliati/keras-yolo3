@@ -6,7 +6,7 @@ import numpy as np
 import tensorflow as tf
 from keras import backend as K
 from keras.layers import Conv2D, Add, ZeroPadding2D, UpSampling2D, Concatenate, MaxPooling2D
-from keras.layers.advanced_activations import LeakyReLU
+from keras.layers.advanced_activations import LeakyReLU, Softmax
 from keras.layers.normalization import BatchNormalization
 from keras.models import Model
 from keras.regularizers import l2
@@ -114,14 +114,16 @@ def tiny_yolo_infusion_body(inputs, num_anchors, num_classes):
     # y_seg = BatchNormalization()(y_seg) #do we need this?
     # y_seg = LeakyReLU(alpha=0.1,name="seg_output")(y_seg) #do we need this?
 
-    ## test2 : manual & defined yolo layer parameters -> it's a mess on tensorboard graph.
+    ## test seg-000 : manual & defined yolo layer parameters -> it's a mess on tensorboard graph.
 
-    y_seg = Conv2D(2, (1,1), use_bias=False, padding='same', kernel_regularizer=l2(5e-4) )(x2) #Should we get from x3 instead?
-    y_seg = BatchNormalization()(y_seg) #do we need this?
-    y_seg = LeakyReLU(alpha=0.1,name="seg_output")(y_seg) #do we need this?
+    # y_seg = Conv2D(2, (1,1), use_bias=False, padding='same', kernel_regularizer=l2(5e-4) )(x2) #Should we get from x3 instead?
+    # y_seg = BatchNormalization()(y_seg) #do we need this?
+    # y_seg = LeakyReLU(alpha=0.1,name="seg_output")(y_seg) #do we need this?
 
-    ## test3 : just DarknetConv2D layer & yolo layer parameters -> not tested yet.
-    ## y_seg = DarknetConv2D(2, (1,1),name="seg_output")(x2)
+    ## test seg-001/ and seg-002 : just DarknetConv2D layer & yolo layer parameters
+    y_seg = DarknetConv2D(2, (1,1))(x2)
+    # y_seg = BatchNormalization()(y_seg)
+    y_seg = Softmax(name="seg_output")(y_seg)
 
 
     #we could upsample the 13x13 output to higher dimensions.
@@ -433,7 +435,6 @@ def yolo_loss(args, anchors, num_classes, ignore_thresh=.5, model_name=None, pri
         num_outputs = num_layers + 1
 
     #args => head_a, head_b, seg, input_a, input_b
-
     yolo_outputs = args[:num_outputs] #head_a, head_b, seg_output
     y_true = args[num_outputs:] #input_a,input_b, input_seg
     anchor_mask = [[6,7,8], [3,4,5], [0,1,2]] if num_layers==3 else [[3,4,5], [1,2,3]]
@@ -442,6 +443,7 @@ def yolo_loss(args, anchors, num_classes, ignore_thresh=.5, model_name=None, pri
     loss = 0
     m = K.shape(yolo_outputs[0])[0] # batch size, tensor
     mf = K.cast(m, K.dtype(yolo_outputs[0]))
+    # print('k.eval',K.eval(mf))
 
     for l in range(num_layers):
         object_mask = y_true[l][..., 4:5]
@@ -489,9 +491,11 @@ def yolo_loss(args, anchors, num_classes, ignore_thresh=.5, model_name=None, pri
         #calc seg loss
         raw_true_seg = y_true[num_outputs-1] #seg is always the last output.
         raw_pred_seg = yolo_outputs[num_outputs-1]
-        seg_loss = K.binary_crossentropy(raw_true_seg, raw_pred_seg, from_logits=True) #this will come from the network output, so should be from logits, right?
+        print('raw_true_seg, raw_pred_seg',raw_true_seg, raw_pred_seg)
+        # seg_loss = K.binary_crossentropy(raw_true_seg, raw_pred_seg, from_logits=True) #requires sigmoid activation
+        # loss += K.sum(seg_loss) / mf #mf seems to be the batch size.
+        seg_loss = K.categorical_crossentropy(raw_true_seg, raw_pred_seg, from_logits=True) #requires softmax activation
         loss += seg_loss
-        print('seg_loss',seg_loss)
         if print_loss:
             loss = tf.Print(loss, [loss, seg_loss], message="loss (seg): ")
 
