@@ -104,7 +104,7 @@ def tiny_yolo_infusion_body(inputs, num_anchors, num_classes):
             MaxPooling2D(pool_size=(2,2), strides=(1,1), padding='same'),
             DarknetConv2D_BN_Leaky(1024, (3,3))
             )(x1)
-    x3 = DarknetConv2D_BN_Leaky(256, (1,1))(x2)
+    x3 = DarknetConv2D_BN_Leaky(256, (1,1))(x2) #should test connecting seg to this.
 
     ## weak segmentation
 
@@ -121,9 +121,17 @@ def tiny_yolo_infusion_body(inputs, num_anchors, num_classes):
     # y_seg = LeakyReLU(alpha=0.1,name="seg_output")(y_seg) #do we need this?
 
     ## test seg-001/ and seg-002 : just DarknetConv2D layer & yolo layer parameters
-    y_seg = DarknetConv2D(2, (1,1))(x2)
+    # y_seg = DarknetConv2D(2, (1,1))(x2)
+    # y_seg = DarknetConv2D(2, (1,1), kernel_initializer='he_normal', bias_initializer='constant')(x2)
     # y_seg = BatchNormalization()(y_seg)
-    y_seg = Softmax(name="seg_output")(y_seg)
+    # y_seg = Softmax(name="seg_output")(y_seg)
+
+    #seg-008
+    # y_seg = Conv2D(2,(1,1), name="seg_output", activation='softmax')(x2)
+    y_seg = compose(
+        Conv2D(2,(1,1), name="seg_conv", kernel_initializer='he_normal', bias_initializer='constant'),
+        Softmax(name="seg_output")
+        )(x2)
 
 
     #we could upsample the 13x13 output to higher dimensions.
@@ -131,7 +139,7 @@ def tiny_yolo_infusion_body(inputs, num_anchors, num_classes):
 
     y1 = compose(
             DarknetConv2D_BN_Leaky(512, (3,3)),
-            DarknetConv2D(num_anchors*(num_classes+5), (1,1), name='yolo_head_a_output')
+            DarknetConv2D(num_anchors*(num_classes+5), (1,1))
             )(x3)
 
     x3 = compose(
@@ -141,7 +149,7 @@ def tiny_yolo_infusion_body(inputs, num_anchors, num_classes):
     y2 = compose(
             Concatenate(),
             DarknetConv2D_BN_Leaky(256, (3,3)),
-            DarknetConv2D(num_anchors*(num_classes+5), (1,1), name='yolo_head_b_output')
+            DarknetConv2D(num_anchors*(num_classes+5), (1,1))
             )([x3,x1])
 
     return Model(inputs=inputs, outputs=[y1,y2,y_seg])
@@ -492,10 +500,11 @@ def yolo_loss(args, anchors, num_classes, ignore_thresh=.5, model_name=None, pri
         raw_true_seg = y_true[num_outputs-1] #seg is always the last output.
         raw_pred_seg = yolo_outputs[num_outputs-1]
         print('raw_true_seg, raw_pred_seg',raw_true_seg, raw_pred_seg)
-        # seg_loss = K.binary_crossentropy(raw_true_seg, raw_pred_seg, from_logits=True) #requires sigmoid activation
+        # seg_loss = K.binary_crossentropy(raw_true_seg, output=raw_pred_seg, from_logits=False) #requires sigmoid activation
+        seg_loss = K.categorical_crossentropy(raw_true_seg, raw_pred_seg, from_logits=False) #requires softmax activation
+        # loss += seg_loss
+        loss += K.mean(seg_loss)
         # loss += K.sum(seg_loss) / mf #mf seems to be the batch size.
-        seg_loss = K.categorical_crossentropy(raw_true_seg, raw_pred_seg, from_logits=True) #requires softmax activation
-        loss += seg_loss
         if print_loss:
             loss = tf.Print(loss, [loss, seg_loss], message="loss (seg): ")
 

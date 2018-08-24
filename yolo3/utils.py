@@ -154,3 +154,4 @@ def get_seg_data(annotation_line, img_shape, input_shape):
     bg_mask = np.invert(fg_mask)
 
     return np.dstack((fg_mask,bg_mask))
+    # return np.dstack((bg_mask,fg_mask))

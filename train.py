@@ -58,18 +58,18 @@ def _main(train_config):
     class_names = get_classes(classes_path)
     num_classes = len(class_names)
     anchors = get_anchors(anchors_path)
-    freeze_body = 0
-    weights_path = None
+    freeze_body = 1
+    pretrained_weights_path = train_config['pretrained_weights_path']
 
     input_shape = (416,416) # multiple of 32, hw
 
     is_tiny_version = len(anchors)==6 # default setting
     if is_tiny_version:
-        model = create_tiny_model(input_shape, anchors, num_classes, load_pretrained=False,
-            freeze_body=freeze_body, weights_path=weights_path, model_name=model_name)
+        model = create_tiny_model(input_shape, anchors, num_classes, load_pretrained=True,
+            freeze_body=freeze_body, weights_path=pretrained_weights_path, model_name=model_name)
     else:
-        model = create_model(input_shape, anchors, num_classes, load_pretrained=False,
-            freeze_body=freeze_body, weights_path=weights_path, model_name=model_name) # make sure you know what you freeze
+        model = create_model(input_shape, anchors, num_classes, load_pretrained=True,
+            freeze_body=freeze_body, weights_path=pretrained_weights_path, model_name=model_name) # make sure you know what you freeze
 
     logging = TensorBoard(log_dir=log_dir)
     checkpoint = ModelCheckpoint(log_dir + 'ep{epoch:03d}-loss{loss:.3f}-val_loss{val_loss:.3f}.h5',
@@ -204,7 +204,7 @@ def create_tiny_model(input_shape, anchors, num_classes, load_pretrained=True, f
 
         if load_pretrained:
             print("####### WARNING ####### Review whether the parameters for freezing are OK.")
-            raise Exception('freezing requires review.')
+            # raise Exception('freezing requires review.')
             model_body.load_weights(weights_path, by_name=True, skip_mismatch=True)
             print('Load weights {}.'.format(weights_path))
             if freeze_body in [1, 2]:
