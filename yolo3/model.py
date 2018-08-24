@@ -108,34 +108,10 @@ def tiny_yolo_infusion_body(inputs, num_anchors, num_classes):
 
     ## weak segmentation
 
-    ## test1 : manual & default layers combination -> seems ok.
-
-    # y_seg = Conv2D(2, (1,1))(x2) #Should we get from x3 instead?
-    # y_seg = BatchNormalization()(y_seg) #do we need this?
-    # y_seg = LeakyReLU(alpha=0.1,name="seg_output")(y_seg) #do we need this?
-
-    ## test seg-000 : manual & defined yolo layer parameters -> it's a mess on tensorboard graph.
-
-    # y_seg = Conv2D(2, (1,1), use_bias=False, padding='same', kernel_regularizer=l2(5e-4) )(x2) #Should we get from x3 instead?
-    # y_seg = BatchNormalization()(y_seg) #do we need this?
-    # y_seg = LeakyReLU(alpha=0.1,name="seg_output")(y_seg) #do we need this?
-
-    ## test seg-001/ and seg-002 : just DarknetConv2D layer & yolo layer parameters
-    # y_seg = DarknetConv2D(2, (1,1))(x2)
-    # y_seg = DarknetConv2D(2, (1,1), kernel_initializer='he_normal', bias_initializer='constant')(x2)
-    # y_seg = BatchNormalization()(y_seg)
-    # y_seg = Softmax(name="seg_output")(y_seg)
-
-    #seg-008
-    # y_seg = Conv2D(2,(1,1), name="seg_output", activation='softmax')(x2)
     y_seg = compose(
         Conv2D(2,(1,1), name="seg_conv", kernel_initializer='he_normal', bias_initializer='constant'),
         Softmax(name="seg_output")
         )(x2)
-
-
-    #we could upsample the 13x13 output to higher dimensions.
-    # or we could get a earlier layers where the dimensions are higher.
 
     y1 = compose(
             DarknetConv2D_BN_Leaky(512, (3,3)),
@@ -503,7 +479,8 @@ def yolo_loss(args, anchors, num_classes, ignore_thresh=.5, model_name=None, pri
         # seg_loss = K.binary_crossentropy(raw_true_seg, output=raw_pred_seg, from_logits=False) #requires sigmoid activation
         seg_loss = K.categorical_crossentropy(raw_true_seg, raw_pred_seg, from_logits=False) #requires softmax activation
         # loss += seg_loss
-        loss += K.mean(seg_loss)
+        seg_loss = K.mean(seg_loss)
+        loss += seg_loss
         # loss += K.sum(seg_loss) / mf #mf seems to be the batch size.
         if print_loss:
             loss = tf.Print(loss, [loss, seg_loss], message="loss (seg): ")
