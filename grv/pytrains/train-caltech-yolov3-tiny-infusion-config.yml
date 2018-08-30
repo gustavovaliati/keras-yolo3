@@ -1,0 +1,8 @@
+dataset_name: caltech
+train_path: train_caltech10x_42782imgs_v20180829205033_keras.txt
+test_path: test_caltech_4024imgs_v20180829205033_keras.txt
+classes_path: model_data/caltech_classes.txt
+anchors_path: model_data/tiny_yolo_anchors.txt
+model_name: tiny_yolo_infusion
+pretrained_weights_path: model_data/yolov3-tiny.h5
+log_dir: logs/caltech_seg-000/

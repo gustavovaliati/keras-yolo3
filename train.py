@@ -58,7 +58,7 @@ def _main(train_config):
     class_names = get_classes(classes_path)
     num_classes = len(class_names)
     anchors = get_anchors(anchors_path)
-    freeze_body = 1
+    freeze_body = -1
     pretrained_weights_path = train_config['pretrained_weights_path']
 
     input_shape = (416,416) # multiple of 32, hw
@@ -239,7 +239,7 @@ def create_tiny_model(input_shape, anchors, num_classes, load_pretrained=True, f
                             'num_classes': num_classes,
                             'ignore_thresh': 0.7,
                             'model_name': model_name,
-                            'print_loss': False
+                            'print_loss': True
                         }
                     )([*model_body.output, *y_true_input])#this is calling yolo_loss and these are the args.
                     # model_body.output is the last layer output tensor.

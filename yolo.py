@@ -42,6 +42,10 @@ ap.add_argument("-w", "--weights",
                 default=None,
                 type=str,
                 help="The weights to load the model. If not provided the trained_weights_final.h5 will be used from the logs dir.")
+ap.add_argument("-a", "--generate_all",
+                required=False,
+                action='store_true',
+                help="Request the script to generate all output formats.")
 ARGS = ap.parse_args()
 
 train_config = None
@@ -50,7 +54,14 @@ with open(ARGS.config_path, 'r') as stream:
 print(train_config)
 
 output_version = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
-output_file_path = 'inference_output_{}.txt'.format(output_version)
+#infer_logdir_epochs_dataset_outputversion
+output_path = 'infer_{}_{}_{}_{}_{}'.format(
+    train_config['log_dir'].replace('/',''),
+    os.path.basename(ARGS.weights).split('-')[0], #[ep022]-loss5.235-val_loss5.453.h5
+    train_config['dataset_name'],
+    train_config['model_name'],
+    output_version,
+    )
 
 class YOLO(object):
     def __init__(self):
@@ -72,6 +83,7 @@ class YOLO(object):
         self.anchors = self._get_anchors()
         self.sess = K.get_session()
         self.model_image_size = (416, 416) # fixed size or (None, None), hw
+        # self.model_image_size = (640, 480) # fixed size or (None, None), hw
         self.boxes, self.scores, self.classes = self.generate()
 
     def _get_class(self):
@@ -166,7 +178,7 @@ class YOLO(object):
                         size=np.floor(3e-2 * image.size[1] + 0.5).astype('int32'))
             thickness = (image.size[0] + image.size[1]) // 300
 
-        detections_string = ''
+        detections = []
         for i, c in reversed(list(enumerate(out_classes))):
             predicted_class = self.class_names[c]
             box = out_boxes[i]
@@ -203,15 +215,13 @@ class YOLO(object):
                 del draw
 
             # <left> <top> <right> <bottom> <class_id> <confidence>
-            detections_string += ' {},{},{},{},{},{}'.format(left, top, right, bottom, c, score)
+            detections.append([left, top, right, bottom, c, score])
 
         end = timer()
         if verbose:
             print('Executed in: ', end - start)
 
-        output_file.write('{}{}\n'.format(image.filename, detections_string))
-
-        return image
+        return image, detections
 
     def close_session(self):
         self.sess.close()
@@ -260,10 +270,11 @@ def detect_video(yolo, video_path, output_path=""):
 
 
 def detect_img(yolo):
+    result_detections = []
+    result_images = []
 
     test_annotations = train_config['test_path']
     with open(test_annotations,'r') as annot_f:
-        with open(output_file_path, 'w') as output_f:
             for annotation in tqdm(annot_f):
                 try:
                     # print(annotation)
@@ -275,9 +286,49 @@ def detect_img(yolo):
                     print('Error while opening file.', e)
                     break;
                 else:
-                    r_image = yolo.detect_image(image,output_file=output_f)
+                    r_image, detections = yolo.detect_image(image)
+                    result_images.append(r_image.filename)
+                    result_detections.append(detections)
                     # r_image.show()
                     # r_image.save('img_seg_test.jpg')
+
+    if ARGS.generate_all or train_config['dataset_name'] == 'pti01':
+        print('Saving results for ',train_config['dataset_name'])
+
+        pti01_output_path = output_path + '.txt'
+        print('Saving in ', pti01_output_path)
+
+        with open(pti01_output_path, 'w') as output_f:
+            for index, image_filename in enumerate(result_images):
+                detections_string = ''
+                for d in result_detections[index]:
+                    # <left> <top> <right> <bottom> <class_id> <confidence>
+                    detections_string += ' {},{},{},{},{},{}'.format(d[0], d[1], d[2], d[3], d[4], d[5])
+
+                output_f.write('{}{}\n'.format(image_filename, detections_string))
+
+    if ARGS.generate_all or train_config['dataset_name'] == 'caltech':
+        print('Saving results for ',train_config['dataset_name'])
+        print('Saving in ', output_path)
+
+        for index, image_filename in enumerate(result_images):
+            #image_filename /absolute/path/set00_V000_662.jpg
+            image_name = os.path.basename(image_filename) #set00_V000_662.jpg
+            path_elements = image_name.replace('.jpg','').split('_')
+            annot_dir = os.path.join(path_elements[0],path_elements[1])
+            annot_dir = os.path.join(output_path,annot_dir)
+            os.makedirs(annot_dir, exist_ok=True)
+            #annot file format -> "I00029.txt"
+            annot_name = 'I{}.txt'.format(path_elements[2].zfill(5))
+            annot_filename = os.path.join(annot_dir, annot_name)
+            with open(annot_filename, 'w') as output_f:
+                for d in result_detections[index]:
+                    #caltech evaluation format -> "[left, top, width, height, score]".
+                    left, top, right, botton, class_id, score = d[0], d[1], d[2], d[3], d[4], d[5]
+                    width = right - left
+                    height = botton - top
+                    output_f.write('{},{},{},{},{}\n'.format(left,top,width,height,score))
+
 
     yolo.close_session()
 
