@@ -36,7 +36,7 @@ from keras.models import Model
 from keras.optimizers import Adam
 from keras.callbacks import TensorBoard, ModelCheckpoint, ReduceLROnPlateau, EarlyStopping
 
-from yolo3.model import preprocess_true_boxes, yolo_body, tiny_yolo_body, yolo_loss, tiny_yolo_infusion_body
+from yolo3.model import preprocess_true_boxes, yolo_body, tiny_yolo_body, yolo_loss, tiny_yolo_infusion_body, infusion_layer
 from yolo3.utils import get_random_data
 
 
@@ -71,7 +71,7 @@ def _main(train_config):
         model = create_model(input_shape, anchors, num_classes, load_pretrained=True,
             freeze_body=freeze_body, weights_path=pretrained_weights_path, model_name=model_name) # make sure you know what you freeze
 
-    logging = TensorBoard(log_dir=log_dir)
+    logging = TensorBoard(log_dir=log_dir, write_grads=True, write_images=True)
     checkpoint = ModelCheckpoint(log_dir + 'ep{epoch:03d}-loss{loss:.3f}-val_loss{val_loss:.3f}.h5',
         monitor='val_loss', save_weights_only=True, save_best_only=True, period=1)
     reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=3, verbose=1)
@@ -108,13 +108,22 @@ def _main(train_config):
     # # Unfreeze and continue training, to fine-tune.
     # # Train longer if the result is not good.
     if True:
-        for i in range(len(model.layers)):
-            model.layers[i].trainable = True
-        model.compile(
-            optimizer=Adam(lr=1e-4),
-            loss={
-                'yolo_loss': lambda y_true, y_pred: y_pred,
-            }) # recompile to apply the change
+        # for i in range(len(model.layers)):
+        #     model.layers[i].trainable = True
+
+        if model_name in ['tiny_yolo_infusion', 'yolo_infusion']:
+            model.compile(
+                optimizer=Adam(lr=1e-4),
+                loss={
+                    'yolo_loss': lambda y_true, y_pred: y_pred, #I guess this is a dump operation. Does nothing
+                    'seg_output' : 'categorical_crossentropy'
+                }) # recompile to apply the change
+        else:
+            model.compile(
+                optimizer=Adam(lr=1e-4),
+                loss={
+                    'yolo_loss': lambda y_true, y_pred: y_pred,
+                }) # recompile to apply the change
         # print('Unfreeze all of the layers.')
 
         batch_size = 4 # note that more GPU memory is required after unfreezing the body
@@ -197,9 +206,9 @@ def create_tiny_model(input_shape, anchors, num_classes, load_pretrained=True, f
                         num_classes+5 )
                 ) for l in range(2)
             ]
-        y_true_input.append(Input(shape=(None, None, 2)))#add segmentation y input.
+        # y_true_input.append(Input(shape=(None, None, 2)))#add segmentation y input.
 
-        model_body = tiny_yolo_infusion_body(image_input, num_anchors//2, num_classes)
+        model_body, connection_layer = tiny_yolo_infusion_body(image_input, num_anchors//2, num_classes)
         print('Create Tiny YOLOv3 INFUSION model with {} anchors and {} classes.'.format(num_anchors, num_classes))
 
         if load_pretrained:
@@ -218,7 +227,9 @@ def create_tiny_model(input_shape, anchors, num_classes, load_pretrained=True, f
                 ...
                 return loss
         '''
-        print('Checking Lambda', [*model_body.output, *y_true_input])
+        print('*model_body.output', *model_body.output)
+        print('*model_body.input', model_body.input)
+        print('*y_true_input', *y_true_input)
         '''
         Checking Lambda [
         <tf.Tensor 'yolo_head_a_output/BiasAdd:0' shape=(?, ?, ?, 18) dtype=float32>,
@@ -230,7 +241,7 @@ def create_tiny_model(input_shape, anchors, num_classes, load_pretrained=True, f
         '''
 
 
-        model_loss = Lambda(
+        default_output = Lambda(
                         yolo_loss,
                         output_shape=(1,),
                         name='yolo_loss',
@@ -239,12 +250,22 @@ def create_tiny_model(input_shape, anchors, num_classes, load_pretrained=True, f
                             'num_classes': num_classes,
                             'ignore_thresh': 0.7,
                             'model_name': model_name,
-                            'print_loss': True
+                            'print_loss': False
                         }
                     )([*model_body.output, *y_true_input])#this is calling yolo_loss and these are the args.
                     # model_body.output is the last layer output tensor.
 
-        model = Model([model_body.input, *y_true_input], model_loss)
+        # connection_layer = model_body.get_layer(name='leaky_re_lu_7')
+        seg_output = infusion_layer(connection_layer)
+
+        # model = Model([model_body.input, *y_true_input], model_loss)
+        '''
+            model_body.input = image_input = Input(shape=(None, None, 3))
+            *y_true_input = input_y_true_layer1, input_y_true_layer2, ...
+            default_output = yolo_loss
+        '''
+        #[model_body.input, *y_true_input] -> [images, y_layer_1, y_layer_2]
+        model = Model([model_body.input, *y_true_input], outputs=[default_output, seg_output])
 
         return model
     else:
@@ -298,9 +319,17 @@ def data_generator(annotation_lines, batch_size, input_shape, anchors, num_class
         box_data = np.array(box_data)
         y_seg_data = np.array(seg_data)
         y_true = preprocess_true_boxes(box_data, input_shape, anchors, num_classes)
+        #np.zeros(batch_size) -> seems like the default implementation send a dummy output.
         if model_name in ['tiny_yolo_infusion', 'yolo_infusion']:
-            y_true.append(y_seg_data)
-        yield [image_data, *y_true], np.zeros(batch_size)
+            # y_true.append(y_seg_data)
+            # yield ({'input_1': x1, 'input_2': x2}, {'output': y}) -> https://keras.io/models/model/
+            yield ([image_data, *y_true],{'yolo_loss':np.zeros(batch_size), 'seg_output':y_seg_data})
+
+        else:
+            yield [image_data, *y_true], np.zeros(batch_size)
+
+
+
 
 def data_generator_wrapper(annotation_lines, batch_size, input_shape, anchors, num_classes, model_name=None):
     n = len(annotation_lines)

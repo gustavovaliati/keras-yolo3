@@ -55,11 +55,12 @@ print(train_config)
 
 output_version = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
 #infer_logdir_epochs_dataset_outputversion
-output_path = 'infer_{}_{}_{}_{}_{}'.format(
+output_path = 'infer_{}_{}_{}_{}_{}_{}'.format(
     train_config['log_dir'].replace('/',''),
     os.path.basename(ARGS.weights).split('-')[0], #[ep022]-loss5.235-val_loss5.453.h5
     train_config['dataset_name'],
     train_config['model_name'],
+    train_config['short_comment'] if train_config['short_comment'] else '',
     output_version,
     )
 

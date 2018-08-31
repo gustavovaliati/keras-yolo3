@@ -150,8 +150,8 @@ def get_seg_data(annotation_line, img_shape, input_shape):
         x_min, y_min, x_max, y_max, class_id = list(map(int, bbox.split(',')))
         fg_mask[y_min:y_max, x_min:x_max] = 1
 
-    fg_mask = letterbox_image(Image.fromarray(fg_mask,'L'), (w,h), black_white=True)
-    bg_mask = np.invert(fg_mask)
+    fg_mask = np.array(letterbox_image(Image.fromarray(fg_mask,'L'), (w,h), black_white=True))
+    bg_mask = np.logical_not(fg_mask).astype(int)
 
-    return np.dstack((fg_mask,bg_mask))
+    return np.dstack((fg_mask, bg_mask))
     # return np.dstack((bg_mask,fg_mask))
