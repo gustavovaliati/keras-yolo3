@@ -39,7 +39,7 @@ from keras.models import Model
 from keras.optimizers import Adam
 from keras.callbacks import TensorBoard, ModelCheckpoint, ReduceLROnPlateau, EarlyStopping
 
-from yolo3.model import preprocess_true_boxes, yolo_body, tiny_yolo_body, yolo_loss, tiny_yolo_infusion_body, infusion_layer
+from yolo3.model import preprocess_true_boxes, yolo_body, tiny_yolo_body, yolo_loss, tiny_yolo_infusion_body, infusion_layer, tiny_yolo_seg_body
 from yolo3.utils import get_random_data
 
 
@@ -64,16 +64,15 @@ def _main(train_config):
     freeze_body = 1
     pretrained_weights_path = train_config['pretrained_weights_path']
 
-    # input_shape = (416,416) # multiple of 32, hw
-    input_shape = (480,640)
+    input_shape = (416,416) # multiple of 32, hw
+    # input_shape = (480,640)
 
     is_tiny_version = len(anchors)==6 # default setting
     if is_tiny_version:
         model = create_tiny_model(input_shape, anchors, num_classes, load_pretrained=True,
             freeze_body=freeze_body, weights_path=pretrained_weights_path, model_name=model_name)
     else:
-        model = create_model(input_shape, anchors, num_classes, load_pretrained=True,
-            freeze_body=freeze_body, weights_path=pretrained_weights_path, model_name=model_name) # make sure you know what you freeze
+        raise Exception('Unknown model.')
 
     logging = TensorBoard(log_dir=log_dir, write_grads=True, write_images=True)
     checkpoint = ModelCheckpoint(log_dir + 'ep{epoch:03d}-loss{loss:.3f}-val_loss{val_loss:.3f}.h5',
@@ -90,14 +89,14 @@ def _main(train_config):
     num_val = int(len(lines)*val_split)
     num_train = len(lines) - num_val
 
-    # seg_shape = (13,13)
-    seg_shape = (15,20)
+    seg_shape = (13,13)
+    # seg_shape = (15,20)
     # seg_shape = (26,26)
 
     # Train with frozen layers first, to get a stable loss.
     # Adjust num epochs to your dataset. This step is enough to obtain a not bad model.
     batch_size_freezed = 4
-    epochs_freezed = 10
+    epochs_freezed = 0
     if True and epochs_freezed > 0:
         compile_model(model, model_name)
         print('Train on {} samples, val on {} samples, with batch size {}.'.format(num_train, num_val, batch_size_freezed))
@@ -119,12 +118,10 @@ def _main(train_config):
         for i in range(len(model.layers)):
             model.layers[i].trainable = True
 
-        #recompile the model once we unfreezed the layers.
         compile_model(model, model_name)
 
-
         batch_size_unfreezed = 4 # note that more GPU memory is required after unfreezing the body
-        epochs_unfreezed = 100
+        epochs_unfreezed = 50
         print('Train on {} samples, val on {} samples, with batch size {}.'.format(num_train, num_val, batch_size_unfreezed))
         model.fit_generator(
             data_generator_wrapper(lines[:num_train], batch_size_unfreezed, input_shape, anchors, num_classes, model_name, seg_shape=seg_shape),
@@ -153,6 +150,12 @@ def compile_model(model, model_name):
             loss={
                 'yolo_loss': lambda y_true, y_pred: y_pred,
             }) # recompile to apply the change
+    elif model_name in ['tiny_yolo_seg']:
+        model.compile(
+            optimizer=Adam(lr=1e-4),
+            loss={
+                'seg_output' : 'categorical_crossentropy'
+            })
     else:
         raise Exception('The model_name is unknown: ', model_name)
 
@@ -212,18 +215,9 @@ def create_tiny_model(input_shape, anchors, num_classes, load_pretrained=True, f
     h, w = input_shape
     num_anchors = len(anchors)
 
-    if model_name == 'tiny_yolo_infusion':
-        y_true_input = [
-            Input(
-                shape=( h//{0:32, 1:16}[l],
-                        w//{0:32, 1:16}[l],
-                        num_anchors//2,
-                        num_classes+5 )
-                ) for l in range(2)
-            ]
-        # y_true_input.append(Input(shape=(None, None, 2)))#add segmentation y input.
+    if model_name == 'tiny_yolo_seg':
 
-        model_body, connection_layer = tiny_yolo_infusion_body(image_input, num_anchors//2, num_classes)
+        model_body = tiny_yolo_seg_body(image_input, num_anchors//2, num_classes)
         print('Create Tiny YOLOv3 INFUSION model with {} anchors and {} classes.'.format(num_anchors, num_classes))
 
         if load_pretrained:
@@ -236,82 +230,12 @@ def create_tiny_model(input_shape, anchors, num_classes, load_pretrained=True, f
                 for i in range(num): model_body.layers[i].trainable = False
                 print('Freeze the first {} layers of total {} layers.'.format(num, len(model_body.layers)))
 
-        '''
-            def yolo_loss(args, anchors, num_classes, ignore_thresh=.5, print_loss=False):
-                ...
-                return loss
-        '''
-        print('*model_body.output', *model_body.output)
+        print('*model_body.output', model_body.output)
         print('*model_body.input', model_body.input)
-        print('*y_true_input', *y_true_input)
-        '''
-        Checking Lambda [
-        <tf.Tensor 'yolo_head_a_output/BiasAdd:0' shape=(?, ?, ?, 18) dtype=float32>,
-        <tf.Tensor 'yolo_head_b_output/BiasAdd:0' shape=(?, ?, ?, 18) dtype=float32>,
-        <tf.Tensor 'seg_output/LeakyRelu/Maximum:0' shape=(?, ?, ?, 2) dtype=float32>,
-        <tf.Tensor 'input_2:0' shape=(?, 13, 13, 3, 6) dtype=float32>,
-        <tf.Tensor 'input_3:0' shape=(?, 26, 26, 3, 6) dtype=float32>,
-        <tf.Tensor 'input_4:0' shape=(?, ?, ?, 2) dtype=float32>]
-        '''
 
-
-        default_output = Lambda(
-                        yolo_loss,
-                        output_shape=(1,),
-                        name='yolo_loss',
-                        arguments={
-                            'anchors': anchors,
-                            'num_classes': num_classes,
-                            'ignore_thresh': 0.7,
-                            'model_name': model_name,
-                            'print_loss': False
-                        }
-                    )([*model_body.output, *y_true_input])#this is calling yolo_loss and these are the args.
-                    # model_body.output is the last layer output tensor.
-
-        # connection_layer = model_body.get_layer(name='leaky_re_lu_7')
-        seg_output = infusion_layer(connection_layer)
-
-        # model = Model([model_body.input, *y_true_input], model_loss)
-        '''
-            model_body.input = image_input = Input(shape=(None, None, 3))
-            *y_true_input = input_y_true_layer1, input_y_true_layer2, ...
-            default_output = yolo_loss
-        '''
-        #[model_body.input, *y_true_input] -> [images, y_layer_1, y_layer_2]
-        model = Model([model_body.input, *y_true_input], outputs=[default_output, seg_output])
-
-        return model
+        return model_body
     else:
-        y_true = [Input(shape=(h//{0:32, 1:16}[l], w//{0:32, 1:16}[l], \
-            num_anchors//2, num_classes+5)) for l in range(2)]
-
-        model_body = tiny_yolo_body(image_input, num_anchors//2, num_classes)
-        print('Create Tiny YOLOv3 model with {} anchors and {} classes.'.format(num_anchors, num_classes))
-
-        if load_pretrained:
-            model_body.load_weights(weights_path, by_name=True, skip_mismatch=True)
-            print('Load weights {}.'.format(weights_path))
-            if freeze_body in [1, 2]:
-                # Freeze the darknet body or freeze all but 2 output layers.
-                num = (20, len(model_body.layers)-2)[freeze_body-1]
-                for i in range(num): model_body.layers[i].trainable = False
-                print('Freeze the first {} layers of total {} layers.'.format(num, len(model_body.layers)))
-
-        model_loss = Lambda(
-                        yolo_loss,
-                        output_shape=(1,),
-                        name='yolo_loss',
-                        arguments={
-                            'anchors': anchors,
-                            'num_classes': num_classes,
-                            'ignore_thresh': 0.7
-                        }
-                    )([*model_body.output, *y_true])
-
-        model = Model([model_body.input, *y_true], model_loss)
-
-        return model
+        raise Exception('Unknown model.')
 
 def data_generator(annotation_lines, batch_size, input_shape, anchors, num_classes, model_name=None, seg_shape=None):
     '''data generator for fit_generator'''
@@ -338,7 +262,8 @@ def data_generator(annotation_lines, batch_size, input_shape, anchors, num_class
             # y_true.append(y_seg_data)
             # yield ({'input_1': x1, 'input_2': x2}, {'output': y}) -> https://keras.io/models/model/
             yield ([image_data, *y_true],{'yolo_loss':np.zeros(batch_size), 'seg_output':y_seg_data})
-
+        elif  model_name in ['tiny_yolo_seg']:
+            yield ([image_data],{'seg_output':y_seg_data})
         else:
             yield [image_data, *y_true], np.zeros(batch_size)
 

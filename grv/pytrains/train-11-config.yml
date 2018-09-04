@@ -5,4 +5,5 @@ classes_path: model_data/pti_classes.txt
 anchors_path: model_data/tiny_yolo_anchors.txt
 model_name: tiny_yolo_infusion
 pretrained_weights_path: model_data/yolov3-tiny.h5
-log_dir: logs/seg-010/
+log_dir: logs/seg-013/
+short_comment: batch4-fixed-bgmask

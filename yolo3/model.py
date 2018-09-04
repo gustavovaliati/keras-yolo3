@@ -88,9 +88,35 @@ def yolo_body(inputs, num_anchors, num_classes):
 def infusion_layer(x):
     y_seg = compose(
         Conv2D(2,(1,1), name="seg_conv", kernel_initializer='he_normal', bias_initializer='constant'),
+        BatchNormalization(name='seg_batchnorm'),
         Softmax(name="seg_output")
         )(x)
     return y_seg
+
+def tiny_yolo_seg_body(inputs, num_anchors, num_classes):
+    '''Create Tiny YOLO_v3 model CNN body in keras, using a weak segmentation infusion layer.'''
+    x1 = compose(
+            DarknetConv2D_BN_Leaky(16, (3,3)),
+            MaxPooling2D(pool_size=(2,2), strides=(2,2), padding='same'),
+            DarknetConv2D_BN_Leaky(32, (3,3)),
+            MaxPooling2D(pool_size=(2,2), strides=(2,2), padding='same'),
+            DarknetConv2D_BN_Leaky(64, (3,3)),
+            MaxPooling2D(pool_size=(2,2), strides=(2,2), padding='same'),
+            DarknetConv2D_BN_Leaky(128, (3,3)),
+            MaxPooling2D(pool_size=(2,2), strides=(2,2), padding='same'),
+            DarknetConv2D_BN_Leaky(256, (3,3))
+            )(inputs)
+    x2 = compose(
+            MaxPooling2D(pool_size=(2,2), strides=(2,2), padding='same'),
+            DarknetConv2D_BN_Leaky(512, (3,3)),
+            MaxPooling2D(pool_size=(2,2), strides=(1,1), padding='same'),
+            DarknetConv2D_BN_Leaky(1024, (3,3))
+            )(x1)
+    x3 = DarknetConv2D_BN_Leaky(256, (1,1))(x2)
+
+    y_seg = infusion_layer(x3)
+
+    return Model(inputs=inputs, outputs=[y_seg])
 
 def tiny_yolo_infusion_body(inputs, num_anchors, num_classes):
     '''Create Tiny YOLO_v3 model CNN body in keras, using a weak segmentation infusion layer.'''
@@ -111,14 +137,14 @@ def tiny_yolo_infusion_body(inputs, num_anchors, num_classes):
             MaxPooling2D(pool_size=(2,2), strides=(1,1), padding='same'),
             DarknetConv2D_BN_Leaky(1024, (3,3))
             )(x1)
-    x3 = DarknetConv2D_BN_Leaky(256, (1,1))(x2) #should test connecting seg to this.
+    x3 = DarknetConv2D_BN_Leaky(256, (1,1))(x2)
 
     y1 = compose(
             DarknetConv2D_BN_Leaky(512, (3,3)),
             DarknetConv2D(num_anchors*(num_classes+5), (1,1))
             )(x3)
 
-    x3 = compose(
+    x4 = compose(
             DarknetConv2D_BN_Leaky(128, (1,1)),
             UpSampling2D(2)
             )(x3)
@@ -126,10 +152,10 @@ def tiny_yolo_infusion_body(inputs, num_anchors, num_classes):
             Concatenate(),
             DarknetConv2D_BN_Leaky(256, (3,3)),
             DarknetConv2D(num_anchors*(num_classes+5), (1,1))
-            )([x3,x1])
+            )([x4,x1])
 
     # return Model(inputs=inputs, outputs=[y1,y2,y_seg])
-    return Model(inputs=inputs, outputs=[y1,y2]), x2
+    return Model(inputs=inputs, outputs=[y1,y2]), x3
 
 def tiny_yolo_body(inputs, num_anchors, num_classes):
     '''Create Tiny YOLO_v3 model CNN body in keras.'''

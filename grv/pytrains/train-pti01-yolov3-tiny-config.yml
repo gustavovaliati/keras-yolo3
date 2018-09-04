@@ -5,4 +5,5 @@ classes_path: model_data/pti_classes.txt
 anchors_path: model_data/tiny_yolo_anchors.txt
 model_name: tiny_yolo
 pretrained_weights_path: model_data/yolov3-tiny.h5
-log_dir: logs/default-tiny-scratch-001/
+log_dir: logs/default-tiny-002/
+short_comment: batch4-testing-freeze

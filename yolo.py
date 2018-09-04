@@ -18,11 +18,11 @@ set_session(tf.Session(config=config))
 
 import numpy as np
 from keras import backend as K
-from keras.models import load_model
+from keras.models import load_model, Model
 from keras.layers import Input
 from PIL import Image, ImageFont, ImageDraw
 
-from yolo3.model import yolo_eval, yolo_body, tiny_yolo_body, tiny_yolo_infusion_body
+from yolo3.model import yolo_eval, yolo_body, tiny_yolo_body, tiny_yolo_infusion_body, infusion_layer
 from yolo3.utils import letterbox_image
 import os,datetime
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
@@ -69,10 +69,8 @@ class YOLO(object):
         self.model_name = train_config['model_name']
         # self.model_path = 'model_data/yolo.h5' # model path or trained weights path
         # self.model_path = 'logs/000_5epochs/trained_weights_final.h5'
-        if not ARGS.weights:
-            self.model_path = os.path.join(train_config['log_dir'] , 'trained_weights_final.h5')
-        else:
-            self.model_path = ARGS.weights
+        self.model_path = ARGS.weights
+        print(self.model_path)
 
         # self.anchors_path = 'model_data/yolo_anchors.txt'
         self.classes_path = train_config['classes_path']
@@ -83,8 +81,8 @@ class YOLO(object):
         self.class_names = self._get_class()
         self.anchors = self._get_anchors()
         self.sess = K.get_session()
-        self.model_image_size = (416, 416) # fixed size or (None, None), hw
-        # self.model_image_size = (640, 480) # fixed size or (None, None), hw
+        # self.model_image_size = (416, 416) # fixed size or (None, None), hw
+        self.model_image_size = (480,640) # fixed size or (None, None), hw
         self.boxes, self.scores, self.classes = self.generate()
 
     def _get_class(self):
@@ -110,8 +108,10 @@ class YOLO(object):
         num_classes = len(self.class_names)
         is_tiny_version = num_anchors==6 # default setting
         if self.model_name == 'tiny_yolo_infusion':
-            self.yolo_model = tiny_yolo_infusion_body(Input(shape=(None,None,3)), num_anchors//2, num_classes)
-            self.yolo_model.load_weights(self.model_path)
+            yolo_model, connection_layer = tiny_yolo_infusion_body(Input(shape=(None,None,3)), num_anchors//2, num_classes)
+            seg_output = infusion_layer(connection_layer)
+            self.yolo_model = Model(inputs=yolo_model.input, outputs=[*yolo_model.output, seg_output])
+            self.yolo_model.load_weights(self.model_path, by_name=True)
         else:
             try:
                 self.yolo_model = load_model(model_path, compile=False)
