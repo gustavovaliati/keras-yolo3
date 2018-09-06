@@ -144,6 +144,17 @@ def get_random_data(annotation_line, input_shape, random=True, max_boxes=20, jit
     updated_annotation_line = update_annotation(annotation_line, box_data)
     n_iw, n_ih = image.size
     seg_data = get_seg_data(updated_annotation_line, img_shape=(n_ih,n_iw), input_shape=seg_shape)
+    # plt.imshow(image_data)
+    # plt.savefig('image_data.jpg')
+    # plt.imshow(seg_data[:,:,0],cmap='jet')
+    # plt.savefig('fg_mask.jpg')
+    # plt.imshow(seg_data[:,:,1],cmap='jet')
+    # plt.savefig('bg_mask.jpg')
+    # print(annotation_line)
+    # print(updated_annotation_line)
+    # print(seg_data[:,:,0])
+    # import sys
+    # sys.exit()
 
     return image_data, box_data, seg_data
 

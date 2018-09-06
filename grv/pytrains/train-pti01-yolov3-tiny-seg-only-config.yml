@@ -6,4 +6,4 @@ anchors_path: model_data/tiny_yolo_anchors.txt
 model_name: tiny_yolo_seg
 pretrained_weights_path: model_data/yolov3-tiny.h5
 log_dir: logs/seg-only-003/
-short_comment: batch4_no-freezed_lr0.0001_withbatchnorm_connect-relu8_fixed-random
+short_comment: batch4_no-freezed_lr0.0001

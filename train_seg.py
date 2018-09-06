@@ -20,6 +20,11 @@ ap.add_argument("-m", "--memory",
                 default=None,
                 type=float,
                 help="The amount of memory to be used by the framework in MB.")
+ap.add_argument("-w", "--pretrained_weights",
+                required=False,
+                default=None,
+                type=str,
+                help="The weights to pre-load in the model. This has priority over the config file.")
 ARGS = ap.parse_args()
 
 TOTAL_GPU_MEMORY=12118
@@ -39,7 +44,7 @@ from keras.models import Model
 from keras.optimizers import Adam
 from keras.callbacks import TensorBoard, ModelCheckpoint, ReduceLROnPlateau, EarlyStopping
 
-from yolo3.model import preprocess_true_boxes, yolo_body, tiny_yolo_body, yolo_loss, tiny_yolo_infusion_body, infusion_layer, tiny_yolo_seg_body
+from yolo3.model import preprocess_true_boxes, yolo_body, tiny_yolo_body, yolo_loss, tiny_yolo_infusion_body, infusion_layer, tiny_yolo_seg_body, vgg_seg_body
 from yolo3.utils import get_random_data
 
 
@@ -62,13 +67,16 @@ def _main(train_config):
     num_classes = len(class_names)
     anchors = get_anchors(anchors_path)
     freeze_body = 1
-    pretrained_weights_path = train_config['pretrained_weights_path']
+    pretrained_weights_path = ARGS.pretrained_weights if ARGS.pretrained_weights else train_config['pretrained_weights_path']
 
     input_shape = (416,416) # multiple of 32, hw
     # input_shape = (480,640)
 
     is_tiny_version = len(anchors)==6 # default setting
-    if is_tiny_version:
+    if model_name == 'tiny_yolo_vgg_seg':
+        model = create_vgg_model(input_shape, load_pretrained=ARGS.pretrained_weights,
+            weights_path=pretrained_weights_path, model_name=model_name)
+    elif is_tiny_version:
         model = create_tiny_model(input_shape, anchors, num_classes, load_pretrained=True,
             freeze_body=freeze_body, weights_path=pretrained_weights_path, model_name=model_name)
     else:
@@ -89,9 +97,9 @@ def _main(train_config):
     num_val = int(len(lines)*val_split)
     num_train = len(lines) - num_val
 
-    seg_shape = (13,13)
+    # seg_shape = (13,13)
     # seg_shape = (15,20)
-    # seg_shape = (26,26)
+    seg_shape = (26,26)
 
     # Train with frozen layers first, to get a stable loss.
     # Adjust num epochs to your dataset. This step is enough to obtain a not bad model.
@@ -119,7 +127,7 @@ def _main(train_config):
             model.layers[i].trainable = True
 
         compile_model(model, model_name)
-
+        print(model.summary())
         batch_size_unfreezed = 4 # note that more GPU memory is required after unfreezing the body
         epochs_unfreezed = 50
         print('Train on {} samples, val on {} samples, with batch size {}.'.format(num_train, num_val, batch_size_unfreezed))
@@ -151,6 +159,12 @@ def compile_model(model, model_name):
                 'yolo_loss': lambda y_true, y_pred: y_pred,
             }) # recompile to apply the change
     elif model_name in ['tiny_yolo_seg']:
+        model.compile(
+            optimizer=Adam(lr=1e-4),
+            loss={
+                'seg_output' : 'categorical_crossentropy'
+            })
+    elif model_name in ['tiny_yolo_vgg_seg']:
         model.compile(
             optimizer=Adam(lr=1e-4),
             loss={
@@ -207,6 +221,19 @@ def create_model(input_shape, anchors, num_classes, load_pretrained=True, freeze
 
         return model
 
+def create_vgg_model(input_shape, load_pretrained=False, weights_path = None, model_name=None):
+    K.clear_session() # get a new session
+    image_input = Input(shape=(None, None, 3))
+    h, w = input_shape
+    if model_name == 'tiny_yolo_vgg_seg':
+        model = vgg_seg_body(image_input)
+        if load_pretrained:
+            model.load_weights(weights_path, by_name=True, skip_mismatch=True)
+            print('Load weights {}.'.format(weights_path))
+        return model
+    else:
+        raise Exception('Unknown model.')
+
 def create_tiny_model(input_shape, anchors, num_classes, load_pretrained=True, freeze_body=2,
             weights_path='model_data/tiny_yolo_weights.h5', model_name=None):
     '''create the training model, for Tiny YOLOv3'''
@@ -262,7 +289,7 @@ def data_generator(annotation_lines, batch_size, input_shape, anchors, num_class
             # y_true.append(y_seg_data)
             # yield ({'input_1': x1, 'input_2': x2}, {'output': y}) -> https://keras.io/models/model/
             yield ([image_data, *y_true],{'yolo_loss':np.zeros(batch_size), 'seg_output':y_seg_data})
-        elif  model_name in ['tiny_yolo_seg']:
+        elif  model_name in ['tiny_yolo_seg', 'tiny_yolo_vgg_seg']:
             yield ([image_data],{'seg_output':y_seg_data})
         else:
             yield [image_data, *y_true], np.zeros(batch_size)

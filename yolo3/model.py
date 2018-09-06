@@ -13,6 +13,9 @@ from keras.regularizers import l2
 
 from yolo3.utils import compose
 
+from keras.preprocessing import image
+from keras.applications.vgg16 import VGG16
+from keras.applications.vgg16 import preprocess_input
 
 @wraps(Conv2D)
 def DarknetConv2D(*args, **kwargs):
@@ -66,6 +69,14 @@ def make_last_layers(x, num_filters, out_filters):
             DarknetConv2D(out_filters, (1,1)))(x)
     return x, y
 
+def yolo_infusion_body(inputs, num_anchors, num_classes):
+    '''Create YOLO_v3 model CNN body in keras, using a weak segmentation infusion layer.'''
+    model_body = yolo_body(inputs, num_anchors, num_classes)
+    connection_layer = model_body.get_layer(name='leaky_re_lu_52')
+    y_seg = infusion_layer(connection_layer.output)
+
+    return Model(model_body.input, outputs=model_body.output), y_seg
+
 def yolo_body(inputs, num_anchors, num_classes):
     """Create YOLO_V3 model CNN body in Keras."""
     darknet = Model(inputs, darknet_body(inputs))
@@ -85,9 +96,24 @@ def yolo_body(inputs, num_anchors, num_classes):
 
     return Model(inputs, [y1,y2,y3])
 
+def vgg_seg_body(inputs, our_weights=False):
+
+    '''
+    If we want to load our weights, we just initialize the weights as random for now.
+    Later we will call the load_weights method.
+    This prevents the model trying to download the imagenet pretrained weights when
+    we dont need.
+    '''
+    w = None if our_weights else 'imagenet'
+    base_model = VGG16(weights=w, include_top=False, input_tensor=inputs)
+    output = infusion_layer(base_model.get_layer('block5_conv3').output)
+    return Model(inputs=inputs, outputs=[output])
+
+
 def infusion_layer(x):
     y_seg = compose(
-        Conv2D(2,(1,1), name="seg_conv", kernel_initializer='he_normal', bias_initializer='constant'),
+        Conv2D(2,(1,1), name="seg_conv", kernel_initializer='he_normal', bias_initializer='constant',
+            kernel_regularizer = l2(5e-4), activity_regularizer = l2(5e-4)),
         BatchNormalization(name='seg_batchnorm'),
         Softmax(name="seg_output")
         )(x)
@@ -270,7 +296,7 @@ def yolo_eval(yolo_outputs,
               model_name=None):
     """Evaluate YOLO model on given input and return filtered boxes."""
     num_layers = len(yolo_outputs)
-    if model_name == 'tiny_yolo_infusion':
+    if model_name in ['tiny_yolo_infusion', 'yolo_infusion']:
         num_layers -= 1
 
     anchor_mask = [[6,7,8], [3,4,5], [0,1,2]] if num_layers==3 else [[3,4,5], [1,2,3]] # default setting

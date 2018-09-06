@@ -13,7 +13,7 @@ from tqdm import tqdm
 import tensorflow as tf
 from keras.backend.tensorflow_backend import set_session
 config = tf.ConfigProto()
-config.gpu_options.per_process_gpu_memory_fraction = 0.2
+config.gpu_options.per_process_gpu_memory_fraction = 0.3
 set_session(tf.Session(config=config))
 
 import numpy as np
@@ -22,7 +22,7 @@ from keras.models import load_model, Model
 from keras.layers import Input
 from PIL import Image, ImageFont, ImageDraw
 
-from yolo3.model import yolo_eval, yolo_body, tiny_yolo_body, tiny_yolo_infusion_body, infusion_layer
+from yolo3.model import yolo_eval, yolo_body, tiny_yolo_body, tiny_yolo_infusion_body, infusion_layer, yolo_infusion_body
 from yolo3.utils import letterbox_image
 import os,datetime
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
@@ -108,8 +108,14 @@ class YOLO(object):
         num_classes = len(self.class_names)
         is_tiny_version = num_anchors==6 # default setting
         if self.model_name == 'tiny_yolo_infusion':
+            print('Loading model weights', self.model_path)
             yolo_model, connection_layer = tiny_yolo_infusion_body(Input(shape=(None,None,3)), num_anchors//2, num_classes)
             seg_output = infusion_layer(connection_layer)
+            self.yolo_model = Model(inputs=yolo_model.input, outputs=[*yolo_model.output, seg_output])
+            self.yolo_model.load_weights(self.model_path, by_name=True)
+        elif self.model_name == 'yolo_infusion':
+            print('Loading model weights', self.model_path)
+            yolo_model, seg_output = yolo_infusion_body(Input(shape=(None,None,3)), num_anchors//3, num_classes)
             self.yolo_model = Model(inputs=yolo_model.input, outputs=[*yolo_model.output, seg_output])
             self.yolo_model.load_weights(self.model_path, by_name=True)
         else:
