@@ -3,8 +3,7 @@ train_path: train_pti01_6342imgs_v20180706193526_keras.txt
 test_path: test_pti01_1585imgs_v20180706193526_keras.txt
 classes_path: model_data/pti_classes.txt
 anchors_path: model_data/tiny_yolo_anchors.txt
-# anchors_path: model_data/pti_tiny_640x480_anchors.txt
-model_name: tiny_yolo
+model_name: tiny_yolo_infusion_hydra
 pretrained_weights_path: model_data/yolov3-tiny.h5
-log_dir: logs/default-tiny-006
-short_comment: batch2-no-freezed_lr0.0001_640x480net
+log_dir: logs/hydra-000/
+short_comment: batch4_no-freezed_lr0.0001_batchnorm_relu8_640x480net_loss-weight-seg2.0

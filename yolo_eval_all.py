@@ -8,6 +8,7 @@ import colorsys
 import os
 from timeit import default_timer as timer
 from tqdm import tqdm
+import glob
 
 
 import tensorflow as tf
@@ -37,11 +38,11 @@ ap.add_argument("-g", "--config_path",
                 default=None,
                 type=str,
                 help="The training configuration.")
-ap.add_argument("-w", "--weights",
-                required=False,
-                default=None,
-                type=str,
-                help="The weights to load the model. If not provided the trained_weights_final.h5 will be used from the logs dir.")
+# ap.add_argument("-w", "--weights",
+#                 required=False,
+#                 default=None,
+#                 type=str,
+#                 help="The weights to load the model. If not provided the trained_weights_final.h5 will be used from the logs dir.")
 ap.add_argument("-a", "--generate_all",
                 required=False,
                 action='store_true',
@@ -53,26 +54,17 @@ with open(ARGS.config_path, 'r') as stream:
     train_config = yaml.load(stream)
 print(train_config)
 
-if not train_config['log_dir'] in ARGS.weights:
-    raise Exception('Wrong setup: log_dir <-> weights')
+# if not train_config['log_dir'] in ARGS.weights:
+#     raise Exception('Wrong setup: log_dir <-> weights')
 
-output_version = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
-#infer_logdir_epochs_dataset_outputversion
-output_path = 'infer_{}_{}_{}_{}_{}_{}'.format(
-    train_config['log_dir'].replace('/',''),
-    os.path.basename(ARGS.weights).split('-')[0], #[ep022]-loss5.235-val_loss5.453.h5
-    train_config['dataset_name'],
-    train_config['model_name'],
-    train_config['short_comment'] if train_config['short_comment'] else '',
-    output_version,
-    )
+
 
 class YOLO(object):
-    def __init__(self):
+    def __init__(self, model_path=None):
         self.model_name = train_config['model_name']
         # self.model_path = 'model_data/yolo.h5' # model path or trained weights path
         # self.model_path = 'logs/000_5epochs/trained_weights_final.h5'
-        self.model_path = ARGS.weights
+        self.model_path = model_path
         print(self.model_path)
 
         # self.anchors_path = 'model_data/yolo_anchors.txt'
@@ -103,8 +95,9 @@ class YOLO(object):
         return np.array(anchors).reshape(-1, 2)
 
     def generate(self):
-        model_path = os.path.expanduser(self.model_path)
-        assert model_path.endswith('.h5'), 'Keras model or weights must be a .h5 file.'
+        if self.model_path:
+            model_path = os.path.expanduser(self.model_path)
+            assert model_path.endswith('.h5'), 'Keras model or weights must be a .h5 file.'
 
         # Load model, or construct model and load weights.
         num_anchors = len(self.anchors)
@@ -114,7 +107,7 @@ class YOLO(object):
             print('Loading model weights', self.model_path)
             #old style
             self.yolo_model = tiny_yolo_infusion_body(Input(shape=(None,None,3)), num_anchors//2, num_classes)
-            self.yolo_model.load_weights(self.model_path, by_name=True)
+            # self.yolo_model.load_weights(self.model_path, by_name=True)
             #new style
             # yolo_model, connection_layer = tiny_yolo_infusion_body(Input(shape=(None,None,3)), num_anchors//2, num_classes)
             # seg_output = infusion_layer(connection_layer)
@@ -123,25 +116,25 @@ class YOLO(object):
         elif self.model_name == 'tiny_yolo_infusion_hydra':
             #old style
             self.yolo_model = tiny_yolo_infusion_hydra_body(Input(shape=(None,None,3)), num_anchors//2, num_classes)
-            self.yolo_model.load_weights(self.model_path, by_name=True)
+            # self.yolo_model.load_weights(self.model_path, by_name=True)
         elif self.model_name == 'yolo_infusion':
             print('Loading model weights', self.model_path)
             yolo_model, seg_output = yolo_infusion_body(Input(shape=(None,None,3)), num_anchors//3, num_classes)
             self.yolo_model = Model(inputs=yolo_model.input, outputs=[*yolo_model.output, seg_output])
-            self.yolo_model.load_weights(self.model_path, by_name=True)
+            # self.yolo_model.load_weights(self.model_path, by_name=True)
         else:
             try:
                 self.yolo_model = load_model(model_path, compile=False)
             except:
                 self.yolo_model = tiny_yolo_body(Input(shape=(None,None,3)), num_anchors//2, num_classes) \
                     if is_tiny_version else yolo_body(Input(shape=(None,None,3)), num_anchors//3, num_classes)
-                self.yolo_model.load_weights(self.model_path) # make sure model, anchors and classes match
+                # self.yolo_model.load_weights(self.model_path) # make sure model, anchors and classes match
             else:
                 assert self.yolo_model.layers[-1].output_shape[-1] == \
                     num_anchors/len(self.yolo_model.output) * (num_classes + 5), \
                     'Mismatch between model and given anchor and class sizes'
-
-        print('{} model, anchors, and classes loaded.'.format(model_path))
+        if self.model_path:
+            print('{} model, anchors, and classes loaded.'.format(model_path))
 
         # Generate colors for drawing bounding boxes.
         hsv_tuples = [(x / len(self.class_names), 1., 1.)
@@ -244,50 +237,7 @@ class YOLO(object):
     def close_session(self):
         self.sess.close()
 
-
-def detect_video(yolo, video_path, output_path=""):
-    import cv2
-    vid = cv2.VideoCapture(video_path)
-    if not vid.isOpened():
-        raise IOError("Couldn't open webcam or video")
-    video_FourCC    = int(vid.get(cv2.CAP_PROP_FOURCC))
-    video_fps       = vid.get(cv2.CAP_PROP_FPS)
-    video_size      = (int(vid.get(cv2.CAP_PROP_FRAME_WIDTH)),
-                        int(vid.get(cv2.CAP_PROP_FRAME_HEIGHT)))
-    isOutput = True if output_path != "" else False
-    if isOutput:
-        print("!!! TYPE:", type(output_path), type(video_FourCC), type(video_fps), type(video_size))
-        out = cv2.VideoWriter(output_path, video_FourCC, video_fps, video_size)
-    accum_time = 0
-    curr_fps = 0
-    fps = "FPS: ??"
-    prev_time = timer()
-    while True:
-        return_value, frame = vid.read()
-        image = Image.fromarray(frame)
-        image = yolo.detect_image(image)
-        result = np.asarray(image)
-        curr_time = timer()
-        exec_time = curr_time - prev_time
-        prev_time = curr_time
-        accum_time = accum_time + exec_time
-        curr_fps = curr_fps + 1
-        if accum_time > 1:
-            accum_time = accum_time - 1
-            fps = "FPS: " + str(curr_fps)
-            curr_fps = 0
-        cv2.putText(result, text=fps, org=(3, 15), fontFace=cv2.FONT_HERSHEY_SIMPLEX,
-                    fontScale=0.50, color=(255, 0, 0), thickness=2)
-        cv2.namedWindow("result", cv2.WINDOW_NORMAL)
-        cv2.imshow("result", result)
-        if isOutput:
-            out.write(result)
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
-    yolo.close_session()
-
-
-def detect_img(yolo):
+def detect_img(yolo,output_path):
     result_detections = []
     result_images = []
 
@@ -348,7 +298,26 @@ def detect_img(yolo):
                     output_f.write('{},{},{},{},{}\n'.format(left,top,width,height,score))
 
 
-    yolo.close_session()
+    # yolo.close_session()
 
 if __name__ == '__main__':
-    detect_img(YOLO())
+
+    weights_paths = glob.glob(os.path.join(train_config['log_dir'],'*.h5'))
+    weights_paths.sort()
+    output_version = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
+    yolo = YOLO()
+    for weight in weights_paths:
+        #infer_logdir_epochs_dataset_outputversion
+        output_path = 'infer_{}_{}_{}_{}_{}_{}'.format(
+            train_config['log_dir'].replace('/',''),
+            os.path.basename(weight).split('-')[0], #[ep022]-loss5.235-val_loss5.453.h5
+            train_config['dataset_name'],
+            train_config['model_name'],
+            train_config['short_comment'] if train_config['short_comment'] else '',
+            output_version,
+            )
+        print('Loading weights:',weight)
+        yolo.yolo_model.load_weights(weight, by_name=True)
+        detect_img(yolo,output_path=output_path)
+
+    yolo.close_session()

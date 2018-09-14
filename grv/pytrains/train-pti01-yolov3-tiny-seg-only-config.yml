@@ -5,5 +5,5 @@ classes_path: model_data/pti_classes.txt
 anchors_path: model_data/tiny_yolo_anchors.txt
 model_name: tiny_yolo_seg
 pretrained_weights_path: model_data/yolov3-tiny.h5
-log_dir: logs/seg-only-003/
-short_comment: batch4_no-freezed_lr0.0001
+log_dir: logs/seg-only-007/
+short_comment: batch4_no-freezed_lr0.0001_connect-leaky_re_lu_6

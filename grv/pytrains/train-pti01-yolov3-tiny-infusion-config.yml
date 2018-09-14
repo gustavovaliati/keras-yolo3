@@ -5,5 +5,5 @@ classes_path: model_data/pti_classes.txt
 anchors_path: model_data/tiny_yolo_anchors.txt
 model_name: tiny_yolo_infusion
 pretrained_weights_path: model_data/yolov3-tiny.h5
-log_dir: logs/seg-029/
-short_comment: batch4_10freezed_lr0.0001_withbatchnorm_relu8_640x480net_fixed-random_kernel-act-l2_loss-weight-seg2.0
+log_dir: logs/seg-040/
+short_comment: batch2_no-freezed_lr0.0001_withbatchnorm_relu5_640x480net_fixed-random_kernel-act-l2_old-style-loss_loss-weight-seg1.0

@@ -69,8 +69,8 @@ def _main(train_config):
     freeze_body = 1
     pretrained_weights_path = ARGS.pretrained_weights if ARGS.pretrained_weights else train_config['pretrained_weights_path']
 
-    input_shape = (416,416) # multiple of 32, hw
-    # input_shape = (480,640)
+    # input_shape = (416,416) # multiple of 32, hw
+    input_shape = (480,640)
 
     is_tiny_version = len(anchors)==6 # default setting
     if model_name == 'tiny_yolo_vgg_seg':
@@ -99,7 +99,7 @@ def _main(train_config):
 
     # seg_shape = (13,13)
     # seg_shape = (15,20)
-    seg_shape = (26,26)
+    # seg_shape = (26,26)
 
     # Train with frozen layers first, to get a stable loss.
     # Adjust num epochs to your dataset. This step is enough to obtain a not bad model.
@@ -109,9 +109,9 @@ def _main(train_config):
         compile_model(model, model_name)
         print('Train on {} samples, val on {} samples, with batch size {}.'.format(num_train, num_val, batch_size_freezed))
         model.fit_generator(
-                data_generator_wrapper(lines[:num_train], batch_size_freezed, input_shape, anchors, num_classes, model_name, seg_shape=seg_shape),
+                data_generator_wrapper(lines[:num_train], batch_size_freezed, input_shape, anchors, num_classes, model_name),
                 steps_per_epoch=max(1, num_train//batch_size_freezed),
-                validation_data=data_generator_wrapper(lines[num_train:], batch_size_freezed, input_shape, anchors, num_classes, model_name, seg_shape=seg_shape),
+                validation_data=data_generator_wrapper(lines[num_train:], batch_size_freezed, input_shape, anchors, num_classes, model_name),
                 validation_steps=max(1, num_val//batch_size_freezed),
                 epochs=epochs_freezed,
                 initial_epoch=0,
@@ -129,12 +129,12 @@ def _main(train_config):
         compile_model(model, model_name)
         print(model.summary())
         batch_size_unfreezed = 4 # note that more GPU memory is required after unfreezing the body
-        epochs_unfreezed = 50
+        epochs_unfreezed = 100
         print('Train on {} samples, val on {} samples, with batch size {}.'.format(num_train, num_val, batch_size_unfreezed))
         model.fit_generator(
-            data_generator_wrapper(lines[:num_train], batch_size_unfreezed, input_shape, anchors, num_classes, model_name, seg_shape=seg_shape),
+            data_generator_wrapper(lines[:num_train], batch_size_unfreezed, input_shape, anchors, num_classes, model_name),
             steps_per_epoch=max(1, num_train//batch_size_unfreezed),
-            validation_data=data_generator_wrapper(lines[num_train:], batch_size_unfreezed, input_shape, anchors, num_classes, model_name, seg_shape=seg_shape),
+            validation_data=data_generator_wrapper(lines[num_train:], batch_size_unfreezed, input_shape, anchors, num_classes, model_name),
             validation_steps=max(1, num_val//batch_size_unfreezed),
             epochs=epochs_freezed + epochs_unfreezed,
             initial_epoch=epochs_freezed,
@@ -264,7 +264,7 @@ def create_tiny_model(input_shape, anchors, num_classes, load_pretrained=True, f
     else:
         raise Exception('Unknown model.')
 
-def data_generator(annotation_lines, batch_size, input_shape, anchors, num_classes, model_name=None, seg_shape=None):
+def data_generator(annotation_lines, batch_size, input_shape, anchors, num_classes, model_name=None):
     '''data generator for fit_generator'''
     n = len(annotation_lines)
     i = 0
@@ -275,7 +275,7 @@ def data_generator(annotation_lines, batch_size, input_shape, anchors, num_class
         for b in range(batch_size):
             if i==0:
                 np.random.shuffle(annotation_lines)
-            image, box, seg = get_random_data(annotation_lines[i], input_shape, random=True, seg_shape=seg_shape)
+            image, box, seg = get_random_data(annotation_lines[i], input_shape, random=True, model_name=model_name)
             image_data.append(image)
             box_data.append(box)
             seg_data.append(seg)
@@ -294,10 +294,10 @@ def data_generator(annotation_lines, batch_size, input_shape, anchors, num_class
         else:
             yield [image_data, *y_true], np.zeros(batch_size)
 
-def data_generator_wrapper(annotation_lines, batch_size, input_shape, anchors, num_classes, model_name=None, seg_shape=None):
+def data_generator_wrapper(annotation_lines, batch_size, input_shape, anchors, num_classes, model_name=None):
     n = len(annotation_lines)
     if n==0 or batch_size<=0: return None
-    return data_generator(annotation_lines, batch_size, input_shape, anchors, num_classes, model_name, seg_shape=seg_shape)
+    return data_generator(annotation_lines, batch_size, input_shape, anchors, num_classes, model_name=model_name)
 
 if __name__ == '__main__':
 

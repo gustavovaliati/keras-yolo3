@@ -1,7 +1,7 @@
 """Miscellaneous utility functions."""
 
 from functools import reduce
-
+import math
 from PIL import Image
 import numpy as np
 from matplotlib.colors import rgb_to_hsv, hsv_to_rgb
@@ -49,7 +49,7 @@ def update_annotation(old_annotation_line, box_data):
 
     return new_annot
 
-def get_random_data(annotation_line, input_shape, random=True, max_boxes=20, jitter=.3, hue=.1, sat=1.5, val=1.5, proc_img=True, seg_shape=None):
+def get_random_data(annotation_line, input_shape, random=True, max_boxes=20, jitter=.3, hue=.1, sat=1.5, val=1.5, proc_img=True, model_name=None, use_seg_mask_generator=False):
     '''random preprocessing for real-time data augmentation'''
     line = annotation_line.split()
     image = Image.open(line[0])
@@ -86,7 +86,10 @@ def get_random_data(annotation_line, input_shape, random=True, max_boxes=20, jit
         There is no need to update the annotation_line when the image is just resized.
         The get_seg_data already handles that.
         '''
-        seg_data = get_seg_data(annotation_line, img_shape=(ih,iw), input_shape=seg_shape)
+        seg_data = None
+        if model_name in ['tiny_yolo_infusion']:
+            seg_data = get_seg_data(annotation_line, img_shape=(ih,iw), input_shape=input_shape, model_name=model_name, use_seg_mask_generator=use_seg_mask_generator)
+
         return image_data, box_data, seg_data
 
     # resize image
@@ -141,9 +144,11 @@ def get_random_data(annotation_line, input_shape, random=True, max_boxes=20, jit
         if len(box)>max_boxes: box = box[:max_boxes]
         box_data[:len(box)] = box
 
-    updated_annotation_line = update_annotation(annotation_line, box_data)
-    n_iw, n_ih = image.size
-    seg_data = get_seg_data(updated_annotation_line, img_shape=(n_ih,n_iw), input_shape=seg_shape)
+    seg_data = None
+    if model_name in ['tiny_yolo_infusion']:
+        updated_annotation_line = update_annotation(annotation_line, box_data)
+        n_iw, n_ih = image.size
+        seg_data = get_seg_data(updated_annotation_line, img_shape=(n_ih,n_iw), input_shape=input_shape, model_name=model_name, use_seg_mask_generator=use_seg_mask_generator)
     # plt.imshow(image_data)
     # plt.savefig('image_data.jpg')
     # plt.imshow(seg_data[:,:,0],cmap='jet')
@@ -248,7 +253,32 @@ def old_get_random_data(annotation_line, input_shape, random=True, max_boxes=20,
 
     return image_data, box_data, seg_data
 
-def get_seg_data(annotation_line, img_shape, input_shape):
+def seg_mask_generator(annotation_line, img_shape, wanted_shape):
+    '''
+    image_shape = (h,w)
+    wanted_shape = (h,w)
+    '''
+    annot = annotation_line.split(' ')
+    i_h, i_w = img_shape
+    n_h, n_w = wanted_shape
+    fg_mask = np.zeros((wanted_shape), dtype=np.uint8)
+
+    for bbox in annot[1:]:
+        x_min, y_min, x_max, y_max, class_id = list(map(int, bbox.split(',')))
+        # print('x_min, y_min, x_max, y_max',x_min, y_min, x_max, y_max)
+        n_x_min = int(n_w * x_min / i_w)
+        n_x_max = math.ceil(n_w * x_max / i_w) # want to guarantee at least one pixel always
+
+        n_y_min = int(n_h * y_min / i_h)
+        n_y_max = math.ceil(n_h * y_max / i_h) # want to guarantee at least one pixel always
+
+        fg_mask[n_y_min:n_y_max, n_x_min:n_x_max] = 1
+        # print('n_x_min, n_y_min, n_x_max, n_y_max',n_x_min, n_y_min, n_x_max, n_y_max)
+
+    bg_mask = np.logical_not(fg_mask).astype(int)
+    return np.dstack((fg_mask, bg_mask))
+
+def get_seg_data(annotation_line, img_shape, input_shape, model_name=None, use_seg_mask_generator=True):
     ''' Returns the y_true matrix for the weak seg head for a specific annot image
         Parameters
         ----------
@@ -263,28 +293,72 @@ def get_seg_data(annotation_line, img_shape, input_shape):
     '''
 
 
-    ih,iw = img_shape
-    h,w = input_shape
+    ih, iw = img_shape
+    input_h, input_w = input_shape
 
-    # print('get_seg_data ih,iw ',ih,iw )
+    if model_name in ['tiny_yolo_infusion', 'yolo_infusion', 'tiny_yolo_seg']:
 
-    fg_mask = np.zeros((ih,iw), dtype=np.uint8)
-    annot = annotation_line.split(' ')
-    img_path = annot[0]
-    for bbox in annot[1:]:
-        x_min, y_min, x_max, y_max, class_id = list(map(int, bbox.split(',')))
-        fg_mask[y_min:y_max, x_min:x_max] = 1
+        if input_h == 416 and input_w == 416:
+            seg_h, seg_w = 13, 13
+        elif input_h == 480 and input_w == 640:
+            # seg_h, seg_w = 15, 20
+            seg_h, seg_w = 30, 40
+        else:
+            raise Exception('Unknown seg configuration')
 
-    fg_mask = np.array(letterbox_image(Image.fromarray(fg_mask,'L'), (w,h), black_white=True))
-    bg_mask = np.logical_not(fg_mask).astype(int)
+        # print('get_seg_data ih,iw ',ih,iw )
 
-    # print(annotation_line)
-    # print(fg_mask)
-    # print(bg_mask)
-    # plt.imshow(fg_mask, cmap='jet')
-    # plt.savefig('seg_output.jpg')
-    # import sys
-    # sys.exit()
 
-    return np.dstack((fg_mask, bg_mask))
-    # return np.dstack((bg_mask,fg_mask))
+        if use_seg_mask_generator:
+            return seg_mask_generator(annotation_line, img_shape=img_shape, wanted_shape=(seg_h,seg_w))
+        else:
+
+            fg_mask = np.zeros((ih,iw), dtype=np.uint8)
+            annot = annotation_line.split(' ')
+            img_path = annot[0]
+            for bbox in annot[1:]:
+                x_min, y_min, x_max, y_max, class_id = list(map(int, bbox.split(',')))
+                fg_mask[y_min:y_max, x_min:x_max] = 1
+
+            fg_mask = np.array(letterbox_image(Image.fromarray(fg_mask,'L'), (seg_w,seg_h), black_white=True))
+            bg_mask = np.logical_not(fg_mask).astype(int)
+
+            # print(annotation_line)
+            # print(fg_mask)
+            # print(bg_mask)
+            # plt.imshow(fg_mask, cmap='jet')
+            # plt.savefig('seg_output.jpg')
+            # import sys
+            # sys.exit()
+
+            return np.dstack((fg_mask, bg_mask))
+
+    elif model_name in ['tiny_yolo_infusion_hydra']:
+        hydra_config = 1
+        if hydra_config == 1:
+            if input_h == 416 and input_w == 416:
+                seg_heads_inputs = [(26, 26),(13, 13)] # [(h,w), (h,w)]
+            elif input_h == 480 and input_w == 640:
+                seg_heads_inputs = [(30, 40),(15, 20)] # [(h,w), (h,w)]
+            else:
+                raise Exception('Unknown hydra inputs configuration')
+        else:
+            raise Exception('Unknown hydra configuration')
+
+        fg_mask = np.zeros((ih,iw), dtype=np.uint8)
+        annot = annotation_line.split(' ')
+        img_path = annot[0]
+        for bbox in annot[1:]:
+            x_min, y_min, x_max, y_max, class_id = list(map(int, bbox.split(',')))
+            fg_mask[y_min:y_max, x_min:x_max] = 1
+
+        seg_heads_masks = []
+        for seg_heads_input in seg_heads_inputs:
+            seg_h,seg_w = seg_heads_input
+            fg_mask = np.array(letterbox_image(Image.fromarray(fg_mask,'L'), (seg_w,seg_h), black_white=True))
+            bg_mask = np.logical_not(fg_mask).astype(int)
+            seg_heads_masks.append(np.dstack((fg_mask, bg_mask)))
+        return seg_heads_masks
+
+    else:
+        raise Exception('Unknown model name')
