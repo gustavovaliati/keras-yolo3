@@ -56,20 +56,34 @@ with open(output_filename, 'w') as train_f:
     for img_file_path in tqdm(img_list):
         img_file_path = img_file_path.replace('\n','')
         annot_file_path = img_file_path.replace('.jpg', '.txt')
+        stop = False
+        if img_file_path == '/home/gustavo/workspace/mestrado/bbox-grv_transport/Images/001/C_BIBT-16/17/12/11/14/00/12/00163-capture.jpg':
+            stop = True
         train_f.write(img_file_path)
         with open(annot_file_path, 'r') as annot_f:
             for annot in annot_f:
+
                 an = annot.split(' ')
                 class_id = an[0]
-                x_center = float(an[1])*IMG_WIDTH
-                y_center = float(an[2])*IMG_HEIGHT
-                w = float(an[3])*IMG_WIDTH
-                h = float(an[4])*IMG_HEIGHT
+                x_center = float(an[1])*(IMG_WIDTH - 1) #begins in zero
+                y_center = float(an[2])*(IMG_HEIGHT - 1) #begins in zero
+                w = float(an[3])*IMG_WIDTH #begins in one
+                h = float(an[4])*IMG_HEIGHT #begins in one
 
                 x_min = int(x_center - w/2)
                 y_min = int(y_center - h/2)
                 x_max = int(x_min + w)
                 y_max = int(y_min + h)
+
+                #handles annotation tool bug which permits annotating out of the image boundaries.
+                if x_max >= IMG_WIDTH:
+                    x_max = IMG_WIDTH - 1
+                if y_max >= IMG_HEIGHT:
+                    y_max = IMG_HEIGHT - 1
+
+                if stop:
+                    print(an)
+                    print(x_center, y_center, w, h, x_min, y_min, x_max, y_max)
 
                 train_f.write(' {},{},{},{},{}'.format(x_min, y_min, x_max, y_max, class_id))
         train_f.write('\n')

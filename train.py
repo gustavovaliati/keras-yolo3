@@ -44,7 +44,9 @@ from keras.models import Model
 from keras.optimizers import Adam
 from keras.callbacks import TensorBoard, ModelCheckpoint, ReduceLROnPlateau, EarlyStopping
 
-from yolo3.model import preprocess_true_boxes, yolo_body, tiny_yolo_body, yolo_loss, tiny_yolo_infusion_body, infusion_layer, yolo_infusion_body, tiny_yolo_infusion_hydra_body
+from yolo3.model import (preprocess_true_boxes, yolo_body, tiny_yolo_body, yolo_loss,
+    tiny_yolo_infusion_body, infusion_layer, yolo_infusion_body, tiny_yolo_infusion_hydra_body,
+    yolo_body_for_small_objs, tiny_yolo_small_objs_body)
 from yolo3.utils import get_random_data
 
 
@@ -81,6 +83,8 @@ def _main(train_config):
         model = create_model(input_shape, anchors, num_classes, load_pretrained=True,
             freeze_body=freeze_body, weights_path=pretrained_weights_path, model_name=model_name) # make sure you know what you freeze
 
+    # print(model.summary())
+
     logging = TensorBoard(log_dir=log_dir, write_grads=True, write_images=True)
     checkpoint = ModelCheckpoint(os.path.join(log_dir, 'ep{epoch:03d}-loss{loss:.3f}-val_loss{val_loss:.3f}.h5'),
         monitor='val_loss', save_weights_only=True, save_best_only=True, period=1)
@@ -102,8 +106,8 @@ def _main(train_config):
 
     # Train with frozen layers first, to get a stable loss.
     # Adjust num epochs to your dataset. This step is enough to obtain a not bad model.
-    batch_size_freezed = 2
-    epochs_freezed = 0
+    batch_size_freezed = train_config['batch_size_freezed']
+    epochs_freezed = train_config['epochs_freezed']
     if True and epochs_freezed > 0:
         compile_model(model, model_name)
         print('Train on {} samples, val on {} samples, with batch size {}.'.format(num_train, num_val, batch_size_freezed))
@@ -115,7 +119,7 @@ def _main(train_config):
                 epochs=epochs_freezed,
                 initial_epoch=0,
                 callbacks=[logging, checkpoint])
-        model.save_weights(log_dir + 'trained_weights_stage_1.h5')
+        model.save_weights(os.path.join(log_dir,'trained_weights_stage_1.h5'))
 
     # Unfreeze and continue training, to fine-tune.
     # Train longer if the result is not good.
@@ -129,8 +133,8 @@ def _main(train_config):
         compile_model(model, model_name)
 
 
-        batch_size_unfreezed = 2 # note that more GPU memory is required after unfreezing the body
-        epochs_unfreezed = 100
+        batch_size_unfreezed = train_config['batch_size_unfreezed'] # note that more GPU memory is required after unfreezing the body
+        epochs_unfreezed = train_config['epochs_unfreezed']
         print('Train on {} samples, val on {} samples, with batch size {}.'.format(num_train, num_val, batch_size_unfreezed))
         model.fit_generator(
             data_generator_wrapper(lines[:num_train], batch_size_unfreezed, input_shape, anchors, num_classes, model_name),
@@ -140,7 +144,7 @@ def _main(train_config):
             epochs=epochs_freezed + epochs_unfreezed,
             initial_epoch=epochs_freezed,
             callbacks=[logging, checkpoint, reduce_lr, early_stopping])
-        model.save_weights(log_dir + 'trained_weights_final.h5')
+        model.save_weights(os.path.join(log_dir,'trained_weights_final.h5'))
 
     # Further training if needed.
 
@@ -148,22 +152,23 @@ def compile_model(model, model_name):
     print('model_name',model_name)
 
     #old style
-    model.compile(
-        optimizer=Adam(lr=1e-4),
-        loss={
-            'yolo_loss': lambda y_true, y_pred: y_pred,
-        }) # recompile to apply the change
-    return
+    # model.compile(
+    #     optimizer=Adam(lr=1e-4),
+    #     loss={
+    #         'yolo_loss': lambda y_true, y_pred: y_pred,
+    #     }) # recompile to apply the change
+    # return
 
     #new style
     if model_name in ['tiny_yolo_infusion', 'yolo_infusion']:
         model.compile(
             optimizer=Adam(lr=1e-4),
             loss={
-                'yolo_loss': lambda y_true, y_pred: y_pred, #I guess this is a dump operation. Does nothing
-                'seg_output' : 'categorical_crossentropy'
+                'yolo_loss': lambda y_true, y_pred: y_pred, #I guess this is a dumb operation. Does nothing
+                # 'seg_output' : 'categorical_crossentropy'
+                'seg_output' : 'binary_crossentropy'
             },
-            loss_weights={'yolo_loss': 1., 'seg_output': 2.0} #updating yolo_loss may not affect.
+            loss_weights={'yolo_loss': 1., 'seg_output': 0.2} #updating yolo_loss may not affect.
             )
     elif model_name in ['tiny_yolo_infusion_hydra']:
         model.compile(
@@ -234,11 +239,16 @@ def create_model(input_shape, anchors, num_classes, load_pretrained=True, freeze
         model = Model([model_body.input, *y_true], outputs=[model_loss, seg_output])
         print(model.summary())
         return model
-    else:
-        y_true = [Input(shape=(h//{0:32, 1:16, 2:8}[l], w//{0:32, 1:16, 2:8}[l], \
-            num_anchors//3, num_classes+5)) for l in range(3)]
+    elif model_name in ['yolo', 'yolo_small_objs']:
 
-        model_body = yolo_body(image_input, num_anchors//3, num_classes)
+        if model_name == 'yolo_small_objs':
+            y_true = [Input(shape=(h//{0:32, 1:16, 2:4}[l], w//{0:32, 1:16, 2:4}[l], \
+                num_anchors//3, num_classes+5)) for l in range(3)]
+            model_body = yolo_body_for_small_objs(image_input, num_anchors//3, num_classes)
+        else:
+            y_true = [Input(shape=(h//{0:32, 1:16, 2:8}[l], w//{0:32, 1:16, 2:8}[l], \
+            num_anchors//3, num_classes+5)) for l in range(3)]
+            model_body = yolo_body(image_input, num_anchors//3, num_classes)
         print('Create YOLOv3 model with {} anchors and {} classes.'.format(num_anchors, num_classes))
 
         if load_pretrained:
@@ -279,16 +289,17 @@ def create_tiny_model(input_shape, anchors, num_classes, load_pretrained=True, f
         #old style
         if model_name == 'tiny_yolo_infusion_hydra':
             #old style
-            y_true_input += [Input(shape=(None, None, 2)), Input(shape=(None, None, 2))]
+            # y_true_input += [Input(shape=(None, None, 2)), Input(shape=(None, None, 2))]
+            # model_body = tiny_yolo_infusion_hydra_body(image_input, num_anchors//2, num_classes)
             #new style
-            # commented -> y_true_input.append(Input(shape=(None, None, 2)))#add segmentation y input.
-            model_body = tiny_yolo_infusion_hydra_body(image_input, num_anchors//2, num_classes)
+            #keep commented.
+            model_body, connection_layer = tiny_yolo_infusion_hydra_body(image_input, num_anchors//2, num_classes)
         elif model_name == 'tiny_yolo_infusion':
             #old style
-            y_true_input.append(Input(shape=(None, None, 2)))#add segmentation y input.
+            # y_true_input.append(Input(shape=(None, None, 2)))#add segmentation y input.
+            #model_body = tiny_yolo_infusion_body(image_input, num_anchors//2, num_classes)
             #new style
-            # commented -> y_true_input.append(Input(shape=(None, None, 2)))#add segmentation y input.
-            model_body = tiny_yolo_infusion_body(image_input, num_anchors//2, num_classes)
+            model_body, connection_layer = tiny_yolo_infusion_body(image_input, num_anchors//2, num_classes)
         #new style: keep commented.
 
 
@@ -338,24 +349,29 @@ def create_tiny_model(input_shape, anchors, num_classes, load_pretrained=True, f
                     # model_body.output is the last layer output tensor.
 
         #old style
-        model = Model([model_body.input, *y_true_input], default_output)
+        # model = Model([model_body.input, *y_true_input], default_output)
         '''
             model_body.input = image_input = Input(shape=(None, None, 3))
             *y_true_input = input_y_true_layer1, input_y_true_layer2, ...
             default_output = yolo_loss
         '''
         #new style
-        #seg_output = infusion_layer(connection_layer)
-        ##[model_body.input, *y_true_input] -> [images, y_layer_1, y_layer_2]
-        #model = Model([model_body.input, *y_true_input], outputs=[default_output, seg_output])
+        seg_output = infusion_layer(connection_layer)
+        #[model_body.input, *y_true_input] -> [images, y_layer_1, y_layer_2]
+        model = Model([model_body.input, *y_true_input], outputs=[default_output, seg_output])
 
         return model
 
-    elif model_name == 'tiny_yolo':
-        y_true = [Input(shape=(h//{0:32, 1:16}[l], w//{0:32, 1:16}[l], \
-            num_anchors//2, num_classes+5)) for l in range(2)]
+    elif model_name in ['tiny_yolo', 'tiny_yolo_small_objs']:
+        if model_name == 'tiny_yolo_small_objs':
+            y_true = [Input(shape=(h//{0:32, 1:8}[l], w//{0:32, 1:8}[l], \
+                num_anchors//2, num_classes+5)) for l in range(2)]
+            model_body = tiny_yolo_small_objs_body(image_input, num_anchors//2, num_classes)
+        else:
+            y_true = [Input(shape=(h//{0:32, 1:16}[l], w//{0:32, 1:16}[l], \
+                num_anchors//2, num_classes+5)) for l in range(2)]
+            model_body = tiny_yolo_body(image_input, num_anchors//2, num_classes)
 
-        model_body = tiny_yolo_body(image_input, num_anchors//2, num_classes)
         print('Create Tiny YOLOv3 model with {} anchors and {} classes.'.format(num_anchors, num_classes))
 
         if load_pretrained:
@@ -403,27 +419,27 @@ def data_generator(annotation_lines, batch_size, input_shape, anchors, num_class
         image_data = np.array(image_data)
         box_data = np.array(box_data)
         y_seg_data = np.array(seg_data)
-        y_true = preprocess_true_boxes(box_data, input_shape, anchors, num_classes)
+        y_true = preprocess_true_boxes(box_data, input_shape, anchors, num_classes, model_name=model_name)
 
         if model_name in ['tiny_yolo_infusion', 'yolo_infusion']:
             #old style
-            # y_true.append(y_seg_data)
-            yield [image_data, *y_true, y_seg_data], np.zeros(batch_size)
+            # yield [image_data, *y_true, y_seg_data], np.zeros(batch_size)
 
             #new style
             # yield ({'input_1': x1, 'input_2': x2}, {'output': y}) -> https://keras.io/models/model/
-            # yield ([image_data, *y_true],{'yolo_loss':np.zeros(batch_size), 'seg_output':y_seg_data})
+            yield ([image_data, *y_true],{'yolo_loss':np.zeros(batch_size), 'seg_output':y_seg_data})
         elif model_name in ['tiny_yolo_infusion_hydra']:
             #old style
-            y_seg_reorg = list(zip(*y_seg_data))
-            y_seg_data_1 = np.array(y_seg_reorg[0])
-            # print('y_seg_data_1',y_seg_data_1.shape)
-            y_seg_data_2 = np.array(y_seg_reorg[1])
-            # print('y_seg_data_2',y_seg_data_2.shape)
-            yield [image_data, *y_true, y_seg_data_1, y_seg_data_2 ], np.zeros(batch_size)
+            # y_seg_reorg = list(zip(*y_seg_data))
+            # y_seg_data_1 = np.array(y_seg_reorg[0])
+            ## print('y_seg_data_1',y_seg_data_1.shape)
+            # y_seg_data_2 = np.array(y_seg_reorg[1])
+            ## print('y_seg_data_2',y_seg_data_2.shape)
+            # yield [image_data, *y_true, y_seg_data_1, y_seg_data_2 ], np.zeros(batch_size)
             #new style: not implemented yet.
+            pass
 
-        elif model_name in ['tiny_yolo','yolo']:
+        elif model_name in ['tiny_yolo','yolo', 'yolo_small_objs', 'tiny_yolo_small_objs']:
             yield [image_data, *y_true], np.zeros(batch_size) #np.zeros(batch_size) -> seems like the default implementation send a dummy output.
         else:
             raise Exception('unknown model.')
@@ -447,10 +463,12 @@ if __name__ == '__main__':
 
     output_version = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
     #infer_logdir_epochs_dataset_outputversion
-    future_inference_outputpath = 'infer_{}_{}_{}_{}_{}'.format(
+    future_inference_outputpath = 'infer_{}_{}_{}_batch{}_{}-freezed_{}_{}'.format(
         train_config['log_dir'].replace('/',''),
         train_config['dataset_name'],
         train_config['model_name'],
+        train_config['batch_size_freezed'],
+        train_config['epochs_freezed'],
         train_config['short_comment'] if train_config['short_comment'] else '',
         output_version,
         )

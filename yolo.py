@@ -113,17 +113,20 @@ class YOLO(object):
         if self.model_name == 'tiny_yolo_infusion':
             print('Loading model weights', self.model_path)
             #old style
-            self.yolo_model = tiny_yolo_infusion_body(Input(shape=(None,None,3)), num_anchors//2, num_classes)
-            self.yolo_model.load_weights(self.model_path, by_name=True)
-            #new style
-            # yolo_model, connection_layer = tiny_yolo_infusion_body(Input(shape=(None,None,3)), num_anchors//2, num_classes)
-            # seg_output = infusion_layer(connection_layer)
-            # self.yolo_model = Model(inputs=yolo_model.input, outputs=[*yolo_model.output, seg_output])
+            # self.yolo_model = tiny_yolo_infusion_body(Input(shape=(None,None,3)), num_anchors//2, num_classes)
             # self.yolo_model.load_weights(self.model_path, by_name=True)
+            #new style
+            yolo_model, connection_layer = tiny_yolo_infusion_body(Input(shape=(None,None,3)), num_anchors//2, num_classes)
+            seg_output = infusion_layer(connection_layer)
+            self.yolo_model = Model(inputs=yolo_model.input, outputs=[*yolo_model.output, seg_output])
+            self.yolo_model.load_weights(self.model_path, by_name=True)
         elif self.model_name == 'tiny_yolo_infusion_hydra':
             #old style
-            self.yolo_model = tiny_yolo_infusion_hydra_body(Input(shape=(None,None,3)), num_anchors//2, num_classes)
-            self.yolo_model.load_weights(self.model_path, by_name=True)
+            # self.yolo_model = tiny_yolo_infusion_hydra_body(Input(shape=(None,None,3)), num_anchors//2, num_classes)
+            # self.yolo_model.load_weights(self.model_path, by_name=True)
+            #new style
+            #not implemented yet
+            pass
         elif self.model_name == 'yolo_infusion':
             print('Loading model weights', self.model_path)
             yolo_model, seg_output = yolo_infusion_body(Input(shape=(None,None,3)), num_anchors//3, num_classes)

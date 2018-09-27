@@ -9,12 +9,13 @@ import os
 from timeit import default_timer as timer
 from tqdm import tqdm
 import glob
-
+import re
+import math
 
 import tensorflow as tf
 from keras.backend.tensorflow_backend import set_session
 config = tf.ConfigProto()
-config.gpu_options.per_process_gpu_memory_fraction = 0.3
+config.gpu_options.per_process_gpu_memory_fraction = 0.4
 set_session(tf.Session(config=config))
 
 import numpy as np
@@ -23,7 +24,9 @@ from keras.models import load_model, Model
 from keras.layers import Input
 from PIL import Image, ImageFont, ImageDraw
 
-from yolo3.model import yolo_eval, yolo_body, tiny_yolo_body, tiny_yolo_infusion_body, infusion_layer, yolo_infusion_body, tiny_yolo_infusion_hydra_body
+from yolo3.model import (yolo_eval, yolo_body, tiny_yolo_body,
+    tiny_yolo_infusion_body, infusion_layer, yolo_infusion_body, tiny_yolo_infusion_hydra_body,
+    yolo_body_for_small_objs, tiny_yolo_small_objs_body)
 from yolo3.utils import letterbox_image
 import os,datetime
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
@@ -43,10 +46,21 @@ ap.add_argument("-g", "--config_path",
 #                 default=None,
 #                 type=str,
 #                 help="The weights to load the model. If not provided the trained_weights_final.h5 will be used from the logs dir.")
+ap.add_argument("-e", "--only_epochs_above",
+                required=False,
+                default=None,
+                type=int,
+                help="Evaluate only epochs with its number above the specified integer. Otherwise, evaluate all weights")
 ap.add_argument("-a", "--generate_all",
                 required=False,
                 action='store_true',
                 help="Request the script to generate all output formats.")
+ap.add_argument("-c", "--continue_version",
+                required=False,
+                default=None,
+                type=str,
+                help="The evaluation will skip inferences that are already done. The new inferences will use the given version.")
+ap.add_argument("-ca", "--canonical_bboxes", required=False, action="store_true", help="The training configuration.")
 ARGS = ap.parse_args()
 
 train_config = None
@@ -106,33 +120,40 @@ class YOLO(object):
         if self.model_name == 'tiny_yolo_infusion':
             print('Loading model weights', self.model_path)
             #old style
-            self.yolo_model = tiny_yolo_infusion_body(Input(shape=(None,None,3)), num_anchors//2, num_classes)
-            # self.yolo_model.load_weights(self.model_path, by_name=True)
+            # self.yolo_model = tiny_yolo_infusion_body(Input(shape=(None,None,3)), num_anchors//2, num_classes)
+            ## self.yolo_model.load_weights(self.model_path, by_name=True)
             #new style
-            # yolo_model, connection_layer = tiny_yolo_infusion_body(Input(shape=(None,None,3)), num_anchors//2, num_classes)
-            # seg_output = infusion_layer(connection_layer)
-            # self.yolo_model = Model(inputs=yolo_model.input, outputs=[*yolo_model.output, seg_output])
+            yolo_model, connection_layer = tiny_yolo_infusion_body(Input(shape=(None,None,3)), num_anchors//2, num_classes)
+            seg_output = infusion_layer(connection_layer)
+            self.yolo_model = Model(inputs=yolo_model.input, outputs=[*yolo_model.output, seg_output])
             # self.yolo_model.load_weights(self.model_path, by_name=True)
         elif self.model_name == 'tiny_yolo_infusion_hydra':
             #old style
             self.yolo_model = tiny_yolo_infusion_hydra_body(Input(shape=(None,None,3)), num_anchors//2, num_classes)
             # self.yolo_model.load_weights(self.model_path, by_name=True)
+            #new style
+            #not implemented yet
         elif self.model_name == 'yolo_infusion':
             print('Loading model weights', self.model_path)
             yolo_model, seg_output = yolo_infusion_body(Input(shape=(None,None,3)), num_anchors//3, num_classes)
             self.yolo_model = Model(inputs=yolo_model.input, outputs=[*yolo_model.output, seg_output])
             # self.yolo_model.load_weights(self.model_path, by_name=True)
         else:
-            try:
-                self.yolo_model = load_model(model_path, compile=False)
-            except:
-                self.yolo_model = tiny_yolo_body(Input(shape=(None,None,3)), num_anchors//2, num_classes) \
-                    if is_tiny_version else yolo_body(Input(shape=(None,None,3)), num_anchors//3, num_classes)
-                # self.yolo_model.load_weights(self.model_path) # make sure model, anchors and classes match
+            if self.model_name == 'yolo_small_objs':
+                self.yolo_model = yolo_body_for_small_objs(Input(shape=(None,None,3)), num_anchors//3, num_classes)
+            elif self.model_name == 'tiny_yolo_small_objs':
+                self.yolo_model = tiny_yolo_small_objs_body(Input(shape=(None,None,3)), num_anchors//2, num_classes)
             else:
-                assert self.yolo_model.layers[-1].output_shape[-1] == \
-                    num_anchors/len(self.yolo_model.output) * (num_classes + 5), \
-                    'Mismatch between model and given anchor and class sizes'
+                try:
+                    self.yolo_model = load_model(model_path, compile=False)
+                except:
+                    self.yolo_model = tiny_yolo_body(Input(shape=(None,None,3)), num_anchors//2, num_classes) \
+                        if is_tiny_version else yolo_body(Input(shape=(None,None,3)), num_anchors//3, num_classes)
+                    # self.yolo_model.load_weights(self.model_path) # make sure model, anchors and classes match
+                else:
+                    assert self.yolo_model.layers[-1].output_shape[-1] == \
+                        num_anchors/len(self.yolo_model.output) * (num_classes + 5), \
+                        'Mismatch between model and given anchor and class sizes'
         if self.model_path:
             print('{} model, anchors, and classes loaded.'.format(model_path))
 
@@ -237,6 +258,96 @@ class YOLO(object):
     def close_session(self):
         self.sess.close()
 
+def get_ratio(bbox):
+    x_min, y_min, x_max, y_max = bbox
+    return (y_max - y_min)/(x_max - x_min)
+
+def normal_round(number):
+    #3.5
+    integer_n = int(number) #3
+    float_n = number - integer_n #0.5
+    if float_n >= 0.5:
+        return integer_n + 1 #4
+    else:
+        return integer_n
+
+def get_canonical_bboxes(original_bboxes, img_width, img_height, round_type='normal', side_ajustment='one'):
+    acceptable_ratios = [1,2,3]
+    canonical_bboxes = []
+    for bbox in original_bboxes:
+        x_min, y_min, x_max, y_max, class_id = bbox
+        new_x_min, new_y_min, new_x_max, new_y_max, _ = bbox
+
+        if side_ajustment=='one':
+
+            #step1: resize
+            original_ratio = get_ratio(bbox)
+            '''
+            if the original ratio is higher than maximum acceptable_ratios, we need to increase the width.
+            else we can increase the height.
+            '''
+            if original_ratio > max(acceptable_ratios):
+                #we need to increase the width so that the height reduces to maximum acceptable_ratios.
+                max_height_ratio = max(acceptable_ratios)
+                original_height = y_max - y_min
+                #the width should be increased to 1/max_height_ratio of the height.
+                new_width = original_height // max_height_ratio
+                #We need to expand it evenly in the sides.
+                original_width = x_max - x_min
+                width_diff = new_width - original_width #new_width is bigger.
+                new_x_min = x_min - width_diff//2
+                #We need to check if new_x_min still is in the image boundaries.
+                if new_x_min <= 0:
+                    #not enough space
+                    new_x_min = 0
+                    #we will expand the remaining to the other direction.
+                new_x_max = new_x_min + new_width
+                #lets check the same for the new_x_max
+                if new_x_max >= img_width:
+                    #not enough space
+                    new_x_max = img_width
+                    new_x_min = img_width - new_width
+            else:
+                #we can increase the height
+                if round_type == 'normal':
+                    new_height_ratio = normal_round(original_ratio) #normal rounding (up or down).
+                elif round_type == 'up':
+                    new_height_ratio = math.ceil(original_ratio) #rounding up
+                new_height = math.ceil(new_height_ratio*(x_max - x_min)) # the ratio is relative to the width.
+                #In how many pixels did the height grow?
+                original_height = y_max - y_min
+                height_diff = new_height - original_height
+                #We need to split the growth up and down.
+                #So, we put the ymin half the height_diff up.
+                half_diff = height_diff // 2
+                new_y_min = y_min - half_diff
+                #But we check how many pixels are left upwards. We cannot overflow the img borders.
+                if not (y_min - half_diff >= 0):
+                    #not enough space.
+                    new_y_min = 0
+                #Now we have found the good new position for y_min, we add the complete needed height.
+                new_y_max = new_y_min + new_height
+                #We also need to check if we kept outselves the bottom image boundaries.
+                if new_y_max >= img_height: #img_height does not include zero.
+                    #We got out of space in the bottom. So lets move up the bbox to keep in the limits.
+    #                 remaining_height = img_height - new_y_max
+    #                 new_y_min -= remaining_height
+    #                 new_y_max -= remaining_height
+                    new_y_max = img_height
+                    new_y_min = img_height - new_height
+
+            #Lets check if we did it right, otherwise fallback to the original bbox.
+            if not (new_x_min >= 0 and new_y_min >= 0 and new_x_max < img_width and new_y_max < img_height):
+                # messed up, fallback!
+    #             print('Could not convert the original bbox. We are going to use the original. Original: {}. Problematic: {}'.format(bbox, [new_x_min, new_y_min, new_x_max, new_y_max]))
+                canonical_bboxes.append(bbox)
+            else:
+                canonical_bboxes.append([new_x_min, new_y_min, new_x_max, new_y_max, class_id])
+        elif side_ajustment=='both':
+            pass
+
+    return canonical_bboxes
+
 def detect_img(yolo,output_path):
     result_detections = []
     result_images = []
@@ -259,6 +370,9 @@ def detect_img(yolo,output_path):
                     result_detections.append(detections)
                     # r_image.show()
                     # r_image.save('img_seg_test.jpg')
+
+    if ARGS.canonical_bboxes:
+        result_detections = get_canonical_bboxes(result_detections, img_width=image.width, img_height=image.height)
 
     if ARGS.generate_all or train_config['dataset_name'] == 'pti01':
         print('Saving results for ',train_config['dataset_name'])
@@ -306,7 +420,30 @@ if __name__ == '__main__':
     weights_paths.sort()
     output_version = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
     yolo = YOLO()
+
+    #get epoch number by regex
+    #we could just split the string but lets avoid some future trouble.
+    epoch_regex = re.compile('ep[0-9]{3}')
+
     for weight in weights_paths:
+        #evaluate only epochs with number higher than the specified.
+        if ARGS.only_epochs_above:
+            m = epoch_regex.search(weight)
+            if m:
+                epoch_number = int(m.group().replace('ep',''))
+                if epoch_number < ARGS.only_epochs_above:
+                    print('Skipping weight:', weight)
+                    #skip the current epoch weight.
+                    continue
+            else:
+                '''
+                if we dont recognize the epoch numbering pattern, we will
+                evaluate the given weight just to be sure.
+                The final_weight will match this.
+                '''
+                pass
+
+
         #infer_logdir_epochs_dataset_outputversion
         output_path = 'infer_{}_{}_{}_{}_{}_{}'.format(
             train_config['log_dir'].replace('/',''),
@@ -314,10 +451,16 @@ if __name__ == '__main__':
             train_config['dataset_name'],
             train_config['model_name'],
             train_config['short_comment'] if train_config['short_comment'] else '',
-            output_version,
+            ARGS.continue_version if ARGS.continue_version else output_version,
             )
-        print('Loading weights:',weight)
-        yolo.yolo_model.load_weights(weight, by_name=True)
-        detect_img(yolo,output_path=output_path)
+
+        if ((train_config['dataset_name'] == 'pti01' and os.path.exists(output_path + '.txt')) or
+            (train_config['dataset_name'] == 'caltech' and os.path.exists(output_path))):
+                print('Skipping weights:', weight)
+                continue
+        else:
+            print('Loading weights:', weight)
+            yolo.yolo_model.load_weights(weight, by_name=True)
+            detect_img(yolo,output_path=output_path)
 
     yolo.close_session()

@@ -1,0 +1,15 @@
+dataset_name: pti01
+# train_path: train_pti01_6342imgs_v20180706193526_keras.txt
+# test_path: test_pti01_1585imgs_v20180706193526_keras.txt
+# train_path: train_pti01_6342imgs_v20180706193526_keras.txt_new-ratio_round-type-up_side-ajustment-one.txt
+# test_path: test_pti01_1585imgs_v20180706193526_keras.txt_new-ratio_round-type-up_side-ajustment-one.txt
+train_path: train_pti01_6342imgs_v20180706193526_keras.txt_new-ratio_round-type-normal_side-ajustment-one.txt
+test_path: test_pti01_1585imgs_v20180706193526_keras.txt_new-ratio_round-type-normal_side-ajustment-one.txt
+classes_path: model_data/pti_classes.txt
+anchors_path: model_data/tiny_yolo_anchors.txt
+# anchors_path: model_data/pti_tiny_640x480_anchors.txt
+# anchors_path: model_data/pti_tiny_416x416_anchors.txt
+model_name: tiny_yolo
+pretrained_weights_path: model_data/yolov3-tiny.h5
+log_dir: logs/default-tiny-010
+short_comment: batch2-no-freezed_lr0.0001_640x480net

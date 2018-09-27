@@ -5,8 +5,8 @@ from functools import wraps
 import numpy as np
 import tensorflow as tf
 from keras import backend as K
-from keras.layers import Conv2D, Add, ZeroPadding2D, UpSampling2D, Concatenate, MaxPooling2D
-from keras.layers.advanced_activations import LeakyReLU, Softmax
+from keras.layers import Conv2D, Add, ZeroPadding2D, UpSampling2D, Concatenate, MaxPooling2D, Activation
+from keras.layers.advanced_activations import LeakyReLU, Softmax, ReLU
 from keras.layers.normalization import BatchNormalization
 from keras.models import Model
 from keras.regularizers import l2
@@ -71,11 +71,40 @@ def make_last_layers(x, num_filters, out_filters):
 
 def yolo_infusion_body(inputs, num_anchors, num_classes):
     '''Create YOLO_v3 model CNN body in keras, using a weak segmentation infusion layer.'''
-    model_body = yolo_body(inputs, num_anchors, num_classes)
+    model_body = yolo_body_for_small_objs(inputs, num_anchors, num_classes)
     connection_layer = model_body.get_layer(name='leaky_re_lu_52')
     y_seg = infusion_layer(connection_layer.output)
 
     return Model(model_body.input, outputs=model_body.output), y_seg
+
+def yolo_body_for_small_objs(inputs, num_anchors, num_classes):
+    """
+        Create YOLO_V3 model CNN body in Keras.
+        Modified to improve detection of smaller objects.
+        According to: https://github.com/AlexeyAB/darknet#how-to-improve-object-detection
+    """
+    darknet = Model(inputs, darknet_body(inputs))
+    x, y1 = make_last_layers(darknet.output, 512, num_anchors*(num_classes+5))
+
+    x = compose(
+            DarknetConv2D_BN_Leaky(256, (1,1)),
+            UpSampling2D(2))(x)
+    x = Concatenate()([x,darknet.layers[152].output])
+    x, y2 = make_last_layers(x, 256, num_anchors*(num_classes+5))
+
+    x = compose(
+            DarknetConv2D_BN_Leaky(128, (1,1)),
+            UpSampling2D(4))(x) #must change the stride from 2 to 4 to produce doubled resolution of 152x152
+
+    '''
+    Should concat with the darknet's 11th layer istead of 36th.
+    In this implementation the darknet's 36th layer is the 92th (name=add_11).
+    And the darknet's 11th is here the 33rd (name=add_3)
+    '''
+    x = Concatenate()([x,darknet.get_layer(name='add_3').output])
+    x, y3 = make_last_layers(x, 128, num_anchors*(num_classes+5))
+
+    return Model(inputs, [y1,y2,y3])
 
 def yolo_body(inputs, num_anchors, num_classes):
     """Create YOLO_V3 model CNN body in Keras."""
@@ -112,18 +141,27 @@ def vgg_seg_body(inputs, our_weights=False):
 def infusion_layer(x, indexer=None):
     conv2d_name = 'seg_conv'
     batchnorm_name = 'seg_batchnorm'
-    softmax_name = 'seg_output'
+    output_name = 'seg_output'
     if indexer:
         conv2d_name += '_' + str(indexer)
         batchnorm_name += '_' + str(indexer)
-        softmax_name += '_' + str(indexer)
+        output_name += '_' + str(indexer)
 
     y_seg = compose(
         Conv2D(2,(1,1), name=conv2d_name, kernel_initializer='he_normal', bias_initializer='constant',
             kernel_regularizer = l2(5e-4), activity_regularizer = l2(5e-4)
             ),
+        # BatchNormalization(name=output_name),
+
+        # BatchNormalization(name=batchnorm_name),
+        # ReLU(name=output_name, max_value=1.0),
+
+        # BatchNormalization(name=batchnorm_name),
+        # Activation('sigmoid',name=output_name, ),
+
         BatchNormalization(name=batchnorm_name),
-        Softmax(name=softmax_name)
+        Softmax(name=output_name, axis=-1)
+
         )(x)
     return y_seg
 
@@ -227,12 +265,44 @@ def tiny_yolo_infusion_body(inputs, num_anchors, num_classes):
     y2 = DarknetConv2D(num_anchors*(num_classes+5), (1,1))(x19)
 
     #old style
-    y_seg = infusion_layer(x14) #output 15,20
+    # y_seg = infusion_layer(x14) #output 15,20
     # y_seg = infusion_layer(x9) #output 30,40
-    return Model(inputs=inputs, outputs=[y1,y2,y_seg])
+    # return Model(inputs=inputs, outputs=[y1,y2,y_seg])
 
     #new style
-    # return Model(inputs=inputs, outputs=[y1,y2]), x13
+    return Model(inputs=inputs, outputs=[y1,y2]), x14
+
+def tiny_yolo_small_objs_body(inputs, num_anchors, num_classes):
+
+    #backbone
+    #input 480,640
+    x1 = DarknetConv2D_BN_Leaky(16, (3,3))(inputs) #output 480,640
+    x2 = MaxPooling2D(pool_size=(2,2), strides=(2,2), padding='same')(x1) #output 240,320
+    x3 = DarknetConv2D_BN_Leaky(32, (3,3))(x2) #output 240,320
+    x4 = MaxPooling2D(pool_size=(2,2), strides=(2,2), padding='same')(x3) #output 120,160
+    x5 = DarknetConv2D_BN_Leaky(64, (3,3))(x4) #output 120,160
+    x6 = MaxPooling2D(pool_size=(2,2), strides=(2,2), padding='same')(x5) #output 60,80
+    x7 = DarknetConv2D_BN_Leaky(128, (3,3))(x6) #output 60,80
+    x8 = MaxPooling2D(pool_size=(2,2), strides=(2,2), padding='same')(x7) #output 30,40
+    x9 = DarknetConv2D_BN_Leaky(256, (3,3))(x8) #x1 #output 30,40
+    x10 = MaxPooling2D(pool_size=(2,2), strides=(2,2), padding='same')(x9) #output 15,20
+    x11 = DarknetConv2D_BN_Leaky(512, (3,3))(x10) #output 15,20
+    x12 = MaxPooling2D(pool_size=(2,2), strides=(1,1), padding='same')(x11) #output 15,20
+    x13 = DarknetConv2D_BN_Leaky(1024, (3,3))(x12) #x2  #output 15,20
+    x14 = DarknetConv2D_BN_Leaky(256, (1,1))(x13) #x3 #output 15,20
+
+    #head1
+    x15 = DarknetConv2D_BN_Leaky(512, (3,3))(x14)
+    y1 = DarknetConv2D(num_anchors*(num_classes+5), (1,1))(x15)
+
+    #head2
+    x16 = DarknetConv2D_BN_Leaky(128, (1,1))(x14)
+    x17 = UpSampling2D(4)(x16)#increasing upsampling resolution to match the x7 layer.
+    x18 = Concatenate()([x17,x7])#changing to a higher resolution layer. From x9 to x7.
+    x19 = DarknetConv2D_BN_Leaky(256, (3,3))(x18)
+    y2 = DarknetConv2D(num_anchors*(num_classes+5), (1,1))(x19)
+
+    return Model(inputs=inputs, outputs=[y1,y2])
 
 def tiny_yolo_infusion_hydra_body(inputs, num_anchors, num_classes):
     '''Create Tiny YOLO_v3 model CNN body in keras, using a weak segmentation infusion layer.'''
@@ -242,10 +312,10 @@ def tiny_yolo_infusion_hydra_body(inputs, num_anchors, num_classes):
     y_seg_2 = infusion_layer(base_model.get_layer('leaky_re_lu_8').output, indexer=2)
 
     #old style
-    return Model(inputs=base_model.inputs, outputs=[*base_model.output, y_seg_1, y_seg_2])
+    # return Model(inputs=base_model.inputs, outputs=[*base_model.output, y_seg_1, y_seg_2])
 
     #new style
-    # return Model(inputs=base_model.inputs, outputs=[base_model.output]), y_seg_1, y_seg_2
+    return Model(inputs=base_model.inputs, outputs=[base_model.output]), y_seg_1, y_seg_2
 
 def tiny_yolo_body(inputs, num_anchors, num_classes):
     '''Create Tiny YOLO_v3 model CNN body in keras.'''
@@ -401,7 +471,7 @@ def yolo_eval(yolo_outputs,
     return boxes_, scores_, classes_
 
 
-def preprocess_true_boxes(true_boxes, input_shape, anchors, num_classes):
+def preprocess_true_boxes(true_boxes, input_shape, anchors, num_classes, model_name=None):
     '''Preprocess true boxes to training input format
 
     Parameters
@@ -429,7 +499,13 @@ def preprocess_true_boxes(true_boxes, input_shape, anchors, num_classes):
     true_boxes[..., 2:4] = boxes_wh/input_shape[::-1]
 
     m = true_boxes.shape[0]
-    grid_shapes = [input_shape//{0:32, 1:16, 2:8}[l] for l in range(num_layers)]
+    if model_name == 'yolo_small_objs':
+        grid_shapes = [input_shape//{0:32, 1:16, 2:4}[l] for l in range(num_layers)] #small-objs
+    elif model_name == 'tiny_yolo_small_objs':
+        grid_shapes = [input_shape//{0:32, 1:8}[l] for l in range(num_layers)] #small-objs
+    else:
+        grid_shapes = [input_shape//{0:32, 1:16, 2:8}[l] for l in range(num_layers)]
+
     y_true = [np.zeros((m,grid_shapes[l][0],grid_shapes[l][1],len(anchor_mask[l]),5+num_classes),
         dtype='float32') for l in range(num_layers)]
 
@@ -533,12 +609,12 @@ def yolo_loss(args, anchors, num_classes, ignore_thresh=.5, model_name=None, pri
     num_layers = len(anchors)//3 # default setting
     num_outputs = num_layers
     #old style
-    if model_name in ['tiny_yolo_infusion','yolo_infusion']:
-        #add segmentation output layer.
-        num_outputs = num_layers + 1
-    elif model_name in ['tiny_yolo_infusion_hydra']:
-        #add segmentation output layer.
-        num_outputs = num_layers + 2
+    # if model_name in ['tiny_yolo_infusion','yolo_infusion']:
+    #     #add segmentation output layer.
+    #     num_outputs = num_layers + 1
+    # elif model_name in ['tiny_yolo_infusion_hydra']:
+    #     #add segmentation output layer.
+    #     num_outputs = num_layers + 2
     #new style: keep commented.
 
     #args => head_a, head_b, seg, input_a, input_b
@@ -595,38 +671,38 @@ def yolo_loss(args, anchors, num_classes, ignore_thresh=.5, model_name=None, pri
             loss = tf.Print(loss, [loss, xy_loss, wh_loss, confidence_loss, class_loss, K.sum(ignore_mask)], message='loss: ')
 
     #old style
-    if model_name in ['tiny_yolo_infusion','yolo_infusion']:
-        #calc seg loss
-        raw_true_seg = y_true[num_outputs-1] #seg is always the last output.
-        raw_pred_seg = yolo_outputs[num_outputs-1]
-        print('raw_true_seg, raw_pred_seg',raw_true_seg, raw_pred_seg)
-        # seg_loss = K.binary_crossentropy(raw_true_seg, output=raw_pred_seg, from_logits=False) #requires sigmoid activation
-        seg_loss = K.categorical_crossentropy(raw_true_seg, raw_pred_seg, from_logits=False) #requires softmax activation
-        # loss += seg_loss
-        seg_loss = K.sum(seg_loss) / mf
-        loss += seg_loss
-        # loss += K.sum(seg_loss) / mf #mf seems to be the batch size.
-        if print_loss:
-            loss = tf.Print(loss, [loss, seg_loss], message="loss (seg): ")
-    elif model_name in ['tiny_yolo_infusion_hydra']:
-        #calc seg loss
-        raw_true_seg_1 = y_true[num_outputs-2] #seg is always the last output.
-        raw_pred_seg_1 = yolo_outputs[num_outputs-2]
-        print('raw_true_seg_1, raw_pred_seg_1',raw_true_seg_1, raw_pred_seg_1)
-        raw_true_seg_2 = y_true[num_outputs-1] #seg is always the last output.
-        raw_pred_seg_2 = yolo_outputs[num_outputs-1]
-        print('raw_true_seg_2, raw_pred_seg_2',raw_true_seg_2, raw_pred_seg_2)
-        seg_loss_1 = K.categorical_crossentropy(raw_true_seg_1, raw_pred_seg_1, from_logits=False) #requires softmax activation
-        seg_loss_2 = K.categorical_crossentropy(raw_true_seg_2, raw_pred_seg_2, from_logits=False) #requires softmax activation
-        # loss += seg_loss
-        seg_loss_1 = K.sum(seg_loss_1) / mf
-        loss += seg_loss_1
-
-        seg_loss_2 = K.sum(seg_loss_2) / mf
-        loss += seg_loss_2
-        # loss += K.sum(seg_loss) / mf #mf seems to be the batch size.
-        if print_loss:
-            loss = tf.Print(loss, [loss, seg_loss_1, seg_loss_2], message="loss (seg): ")
+    # if model_name in ['tiny_yolo_infusion','yolo_infusion']:
+    #     #calc seg loss
+    #     raw_true_seg = y_true[num_outputs-1] #seg is always the last output.
+    #     raw_pred_seg = yolo_outputs[num_outputs-1]
+    #     print('raw_true_seg, raw_pred_seg',raw_true_seg, raw_pred_seg)
+    #     # seg_loss = K.binary_crossentropy(raw_true_seg, output=raw_pred_seg, from_logits=False) #requires sigmoid activation
+    #     seg_loss = K.categorical_crossentropy(raw_true_seg, raw_pred_seg, from_logits=False) #requires softmax activation
+    #     # loss += seg_loss
+    #     seg_loss = K.sum(seg_loss) / mf
+    #     loss += seg_loss * 2.0
+    #     # loss += K.sum(seg_loss) / mf #mf seems to be the batch size.
+    #     if print_loss:
+    #         loss = tf.Print(loss, [loss, seg_loss], message="loss (seg): ")
+    # elif model_name in ['tiny_yolo_infusion_hydra']:
+    #     #calc seg loss
+    #     raw_true_seg_1 = y_true[num_outputs-2] #seg is always the last output.
+    #     raw_pred_seg_1 = yolo_outputs[num_outputs-2]
+    #     print('raw_true_seg_1, raw_pred_seg_1',raw_true_seg_1, raw_pred_seg_1)
+    #     raw_true_seg_2 = y_true[num_outputs-1] #seg is always the last output.
+    #     raw_pred_seg_2 = yolo_outputs[num_outputs-1]
+    #     print('raw_true_seg_2, raw_pred_seg_2',raw_true_seg_2, raw_pred_seg_2)
+    #     seg_loss_1 = K.categorical_crossentropy(raw_true_seg_1, raw_pred_seg_1, from_logits=False) #requires softmax activation
+    #     seg_loss_2 = K.categorical_crossentropy(raw_true_seg_2, raw_pred_seg_2, from_logits=False) #requires softmax activation
+    #     # loss += seg_loss
+    #     seg_loss_1 = K.sum(seg_loss_1) / mf
+    #     loss += seg_loss_1
+    #
+    #     seg_loss_2 = K.sum(seg_loss_2) / mf
+    #     loss += seg_loss_2
+    #     # loss += K.sum(seg_loss) / mf #mf seems to be the batch size.
+    #     if print_loss:
+    #         loss = tf.Print(loss, [loss, seg_loss_1, seg_loss_2], message="loss (seg): ")
     #new style: keep commented.
 
     return loss
