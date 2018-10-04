@@ -298,11 +298,9 @@ def get_seg_data(annotation_line, img_shape, input_shape, model_name=None, use_s
 
     if model_name in ['tiny_yolo_infusion', 'yolo_infusion', 'tiny_yolo_seg']:
 
-        if input_h == 416 and input_w == 416:
-            seg_h, seg_w = 13, 13
-        elif input_h == 480 and input_w == 640:
-            seg_h, seg_w = 15, 20
-            # seg_h, seg_w = 30, 40
+        if input_h % 32 == 0 and input_w % 32 == 0:
+            # trying to infer automaticaly
+            seg_h, seg_w = input_h // 32, input_w // 32
         else:
             raise Exception('Unknown seg configuration')
 

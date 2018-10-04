@@ -8,13 +8,16 @@ train_path: train_pti01_v20180925220014_keras.txt
 test_path: test_pti01_v20180925220014_keras.txt
 classes_path: model_data/pti_classes.txt
 anchors_path: model_data/yolo_anchors.txt
+# anchors_path: model_data/yolo_anchors_k3.txt
 model_name: yolo
 input_width: 640
 input_height: 480
 pretrained_weights_path: model_data/yolov3.h5
-log_dir: logs/default-002/
+data_augmentation: False
+log_dir: logs/default-004
 batch_size_freezed: 2
-epochs_freezed: 10
+epochs_freezed: 1
 batch_size_unfreezed: 2
 epochs_unfreezed: 100
-short_comment: lr0.0001_640x480net
+#lr0.0001
+short_comment: removing-random

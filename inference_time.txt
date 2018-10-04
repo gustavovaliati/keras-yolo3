@@ -1,0 +1,177 @@
+Loading weights: logs/default-tiny-024/ep034-loss14.467-val_loss14.513.h5
+1561it [00:37, 41.61it/s]
+Saving results for  pti01
+Saving in  infer_logsdefault-tiny-024_ep034_pti01_tiny_yolo_lr0.0001_640x480net_20181001194754.txt
+Loading weights: logs/default-tiny-024/ep041-loss14.359-val_loss14.486.h5
+1561it [00:36, 43.20it/s]
+Saving results for  pti01
+Saving in  infer_logsdefault-tiny-024_ep041_pti01_tiny_yolo_lr0.0001_640x480net_20181001194754.txt
+Loading weights: logs/default-tiny-024/ep050-loss14.246-val_loss14.324.h5
+1561it [00:36, 42.68it/s]
+Saving results for  pti01
+Saving in  infer_logsdefault-tiny-024_ep050_pti01_tiny_yolo_lr0.0001_640x480net_20181001194754.txt
+Loading weights: logs/default-tiny-024/trained_weights_final.h5
+1561it [00:37, 42.15it/s]
+Saving results for  pti01
+Saving in  infer_logsdefault-tiny-024_trained_weights_final.h5_pti01_tiny_yolo_lr0.0001_640x480net_20181001194754.txt
+
+
+---
+
+Loading weights: logs/default-tiny-025/ep001-loss46.093-val_loss20.172.h5
+1561it [00:37, 42.06it/s]
+Saving results for  pti01
+Saving in  infer_logsdefault-tiny-025_ep001_pti01_tiny_yolo_lr0.0001_640x480net_20181001205358.txt
+Loading weights: logs/default-tiny-025/ep002-loss19.408-val_loss18.193.h5
+1561it [00:36, 42.89it/s]
+Saving results for  pti01
+Saving in  infer_logsdefault-tiny-025_ep002_pti01_tiny_yolo_lr0.0001_640x480net_20181001205358.txt
+Loading weights: logs/default-tiny-025/ep003-loss17.706-val_loss17.390.h5
+1561it [00:36, 42.97it/s]
+Saving results for  pti01
+Saving in  infer_logsdefault-tiny-025_ep003_pti01_tiny_yolo_lr0.0001_640x480net_20181001205358.txt
+Loading weights: logs/default-tiny-025/ep004-loss16.870-val_loss16.761.h5
+1561it [00:36, 42.93it/s]
+Saving results for  pti01
+Saving in  infer_logsdefault-tiny-025_ep004_pti01_tiny_yolo_lr0.0001_640x480net_20181001205358.txt
+Loading weights: logs/default-tiny-025/ep005-loss16.476-val_loss15.940.h5
+1561it [00:36, 42.83it/s]
+Saving results for  pti01
+Saving in  infer_logsdefault-tiny-025_ep005_pti01_tiny_yolo_lr0.0001_640x480net_20181001205358.txt
+Loading weights: logs/default-tiny-025/ep007-loss15.640-val_loss15.559.h5
+1561it [00:36, 42.85it/s]
+Saving results for  pti01
+Saving in  infer_logsdefault-tiny-025_ep007_pti01_tiny_yolo_lr0.0001_640x480net_20181001205358.txt
+---
+
+Loading weights: logs/default-003/ep043-loss12.999-val_loss13.277.h5
+1561it [01:22, 18.87it/s]
+Saving results for  pti01
+Saving in  infer_logsdefault-003_ep043_pti01_yolo_lr0.0001_640x480net_20181001195035.txt
+Loading weights: logs/default-003/ep044-loss12.840-val_loss13.189.h5
+1561it [01:21, 19.20it/s]
+Saving results for  pti01
+Saving in  infer_logsdefault-003_ep044_pti01_yolo_lr0.0001_640x480net_20181001195035.txt
+Loading weights: logs/default-003/ep049-loss12.596-val_loss12.746.h5
+1561it [01:21, 19.25it/s]
+Saving results for  pti01
+Saving in  infer_logsdefault-003_ep049_pti01_yolo_lr0.0001_640x480net_20181001195035.txt
+Loading weights: logs/default-003/trained_weights_final.h5
+1561it [01:20, 19.32it/s]
+Saving results for  pti01
+Saving in  infer_logsdefault-003_trained_weights_final.h5_pti01_yolo_lr0.0001_640x480net_20181001195035.txt
+Loading weights: logs/default-003/trained_weights_stage_1.h5
+1561it [01:20, 19.32it/s]
+Saving results for  pti01
+Saving in  infer_logsdefault-003_trained_weights_stage_1.h5_pti01_yolo_lr0.0001_640x480net_20181001195035.txt
+
+
+---
+
+Loading weights: logs/default-tiny-015/ep035-loss13.901-val_loss14.120.h5
+1561it [00:43, 36.03it/s]
+Saving results for  pti01
+Saving in  infer_logsdefault-tiny-015_ep035_pti01_tiny_yolo_lr0.0001_640x480net_20180929120612.txt
+Loading weights: logs/default-tiny-015/ep040-loss13.776-val_loss13.993.h5
+1561it [00:42, 36.65it/s]
+Saving results for  pti01
+Saving in  infer_logsdefault-tiny-015_ep040_pti01_tiny_yolo_lr0.0001_640x480net_20180929120612.txt
+Loading weights: logs/default-tiny-015/ep047-loss13.671-val_loss13.942.h5
+1561it [00:42, 36.67it/s]
+Saving results for  pti01
+Saving in  infer_logsdefault-tiny-015_ep047_pti01_tiny_yolo_lr0.0001_640x480net_20180929120612.txt
+Loading weights: logs/default-tiny-015/trained_weights_final.h5
+1561it [00:42, 36.94it/s]
+Saving results for  pti01
+Saving in  infer_logsdefault-tiny-015_trained_weights_final.h5_pti01_tiny_yolo_lr0.0001_640x480net_20180929120612.txt
+
+
+---
+
+Loading weights: logs/default-tiny-020/ep024-loss14.089-val_loss14.024.h5
+1561it [00:44, 34.74it/s]
+Saving results for  pti01
+Saving in  infer_logsdefault-tiny-020_ep024_pti01_tiny_yolo_lr0.0001_640x480net_20180929113341.txt
+Loading weights: logs/default-tiny-020/ep029-loss13.720-val_loss13.891.h5
+1561it [00:44, 35.20it/s]
+Saving results for  pti01
+Saving in  infer_logsdefault-tiny-020_ep029_pti01_tiny_yolo_lr0.0001_640x480net_20180929113341.txt
+Loading weights: logs/default-tiny-020/ep030-loss13.818-val_loss13.839.h5
+1561it [00:44, 35.34it/s]
+Saving results for  pti01
+Saving in  infer_logsdefault-tiny-020_ep030_pti01_tiny_yolo_lr0.0001_640x480net_20180929113341.txt
+Loading weights: logs/default-tiny-020/trained_weights_final.h5
+1561it [00:43, 35.92it/s]
+Saving results for  pti01
+Saving in  infer_logsdefault-tiny-020_trained_weights_final.h5_pti01_tiny_yolo_lr0.0001_640x480net_20180929113341.txt
+
+---
+
+Loading weights: logs/default-tiny-022/ep001-loss144.395-val_loss26.835.h5
+1561it [00:35, 43.43it/s]
+Saving results for  pti01
+Saving in  infer_logsdefault-tiny-022_ep001_pti01_tiny_yolo_lr0.0001_640x480net_20181001201141.txt
+Loading weights: logs/default-tiny-022/ep002-loss23.486-val_loss20.605.h5
+1561it [00:34, 45.13it/s]
+Saving results for  pti01
+Saving in  infer_logsdefault-tiny-022_ep002_pti01_tiny_yolo_lr0.0001_640x480net_20181001201141.txt
+Loading weights: logs/default-tiny-022/ep003-loss19.925-val_loss19.085.h5
+1561it [00:34, 45.17it/s]
+Saving results for  pti01
+Saving in  infer_logsdefault-tiny-022_ep003_pti01_tiny_yolo_lr0.0001_640x480net_20181001201141.txt
+Loading weights: logs/default-tiny-022/ep004-loss18.543-val_loss18.427.h5
+1561it [00:34, 44.92it/s]
+Saving results for  pti01
+Saving in  infer_logsdefault-tiny-022_ep004_pti01_tiny_yolo_lr0.0001_640x480net_20181001201141.txt
+Loading weights: logs/default-tiny-022/ep005-loss17.773-val_loss17.472.h5
+1561it [00:34, 44.96it/s]
+Saving results for  pti01
+Saving in  infer_logsdefault-tiny-022_ep005_pti01_tiny_yolo_lr0.0001_640x480net_20181001201141.txt
+Loading weights: logs/default-tiny-022/ep006-loss17.238-val_loss16.940.h5
+1561it [00:34, 45.02it/s]
+Saving results for  pti01
+Saving in  infer_logsdefault-tiny-022_ep006_pti01_tiny_yolo_lr0.0001_640x480net_20181001201141.txt
+Loading weights: logs/default-tiny-022/ep007-loss16.715-val_loss16.450.h5
+1561it [00:34, 44.89it/s]
+Saving results for  pti01
+Saving in  infer_logsdefault-tiny-022_ep007_pti01_tiny_yolo_lr0.0001_640x480net_20181001201141.txt
+Loading weights: logs/default-tiny-022/ep008-loss16.488-val_loss16.184.h5
+1561it [00:34, 45.08it/s]
+Saving results for  pti01
+Saving in  infer_logsdefault-tiny-022_ep008_pti01_tiny_yolo_lr0.0001_640x480net_20181001201141.txt
+Loading weights: logs/default-tiny-022/ep010-loss15.969-val_loss15.948.h5
+1561it [00:34, 45.03it/s]
+Saving results for  pti01
+Saving in  infer_logsdefault-tiny-022_ep010_pti01_tiny_yolo_lr0.0001_640x480net_20181001201141.txt
+
+
+---
+
+Loading weights: logs/default-002/ep001-loss209.710-val_loss32.912.h5
+1561it [01:23, 18.77it/s]
+Saving results for  pti01
+Saving in  infer_logsdefault-002_ep001_pti01_yolo_lr0.0001_640x480net_20181001200017.txt
+Loading weights: logs/default-002/ep002-loss27.306-val_loss24.165.h5
+1561it [01:22, 18.99it/s]
+Saving results for  pti01
+Saving in  infer_logsdefault-002_ep002_pti01_yolo_lr0.0001_640x480net_20181001200017.txt
+Loading weights: logs/default-002/ep003-loss23.655-val_loss23.334.h5
+1561it [01:22, 18.87it/s]
+Saving results for  pti01
+Saving in  infer_logsdefault-002_ep003_pti01_yolo_lr0.0001_640x480net_20181001200017.txt
+Loading weights: logs/default-002/ep004-loss22.587-val_loss22.012.h5
+1561it [01:22, 18.84it/s]
+Saving results for  pti01
+Saving in  infer_logsdefault-002_ep004_pti01_yolo_lr0.0001_640x480net_20181001200017.txt
+Loading weights: logs/default-002/ep005-loss22.352-val_loss21.756.h5
+1561it [01:22, 18.89it/s]
+Saving results for  pti01
+Saving in  infer_logsdefault-002_ep005_pti01_yolo_lr0.0001_640x480net_20181001200017.txt
+Loading weights: logs/default-002/ep006-loss21.705-val_loss21.339.h5
+1561it [01:22, 18.92it/s]
+Saving results for  pti01
+Saving in  infer_logsdefault-002_ep006_pti01_yolo_lr0.0001_640x480net_20181001200017.txt
+Loading weights: logs/default-002/ep007-loss21.361-val_loss20.997.h5
+1561it [01:22, 18.83it/s]
+Saving results for  pti01
+Saving in  infer_logsdefault-002_ep007_pti01_yolo_lr0.0001_640x480net_20181001200017.txt

@@ -7,17 +7,21 @@ dataset_name: pti01
 # test_path: test_pti01_1585imgs_v20180706193526_keras.txt_new-ratio_round-type-normal_side-ajustment-one.txt
 train_path: train_pti01_v20180925220014_keras.txt
 test_path: test_pti01_v20180925220014_keras.txt
+# train_path: train_pti01_v20180925220014_keras.txt_new-ratio_round-type-normal_side-ajustment-one.txt
+# test_path: test_pti01_v20180925220014_keras.txt_new-ratio_round-type-normal_side-ajustment-one.txt
 classes_path: model_data/pti_classes.txt
-anchors_path: model_data/tiny_yolo_anchors.txt
+# anchors_path: model_data/tiny_yolo_anchors.txt
+anchors_path: model_data/yolo_anchors_k2.txt
 # anchors_path: model_data/pti_tiny_640x480_anchors_v20180925220014.txt
-model_name: tiny_yolo_infusion
+# anchors_path: model_data/pti_tiny_640x480_anchors.txt
+# anchors_path: model_data/pti_tiny_416x416_anchors.txt
+model_name: tiny_yolo
 input_width: 640
 input_height: 480
 pretrained_weights_path: model_data/yolov3-tiny.h5
-# pretrained_weights_path: logs/default-tiny-005-again/ep029-loss13.310-val_loss12.890.h5
-log_dir: logs/seg-073/
+log_dir: logs/default-tiny-025
 epochs_freezed: 0
 batch_size_freezed: 2
 epochs_unfreezed: 100
 batch_size_unfreezed: 2
-short_comment: lr0.0001_with-batchnorm_relu8_640x480net_new-style-loss_loss-weight-seg0.2_no-softmax
+short_comment: lr0.0001_640x480net

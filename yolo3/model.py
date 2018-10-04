@@ -429,17 +429,20 @@ def yolo_eval(yolo_outputs,
               iou_threshold=.5,
               model_name=None):
     """Evaluate YOLO model on given input and return filtered boxes."""
-    num_layers = len(yolo_outputs)
+    num_yolo_heads = len(yolo_outputs)
     if model_name in ['tiny_yolo_infusion', 'yolo_infusion']:
-        num_layers -= 1
+        num_yolo_heads -= 1
     elif model_name in ['tiny_yolo_infusion_hydra']:
-        num_layers -= 2
+        num_yolo_heads -= 2
 
-    anchor_mask = [[6,7,8], [3,4,5], [0,1,2]] if num_layers==3 else [[3,4,5], [1,2,3]] # default setting
+    # anchor_mask = [[6,7,8], [3,4,5], [0,1,2]] if num_yolo_heads==3 else [[3,4,5], [1,2,3]] # default setting -> # BUG
+    num_anchors_per_head = len(anchors) // num_yolo_heads
+    anchor_mask = np.arange(len(anchors)).reshape(-1,num_anchors_per_head)[::-1] # dynamic mask
+
     input_shape = K.shape(yolo_outputs[0])[1:3] * 32
     boxes = []
     box_scores = []
-    for l in range(num_layers):
+    for l in range(num_yolo_heads):
         _boxes, _box_scores = yolo_boxes_and_scores(yolo_outputs[l],
             anchors[anchor_mask[l]], num_classes, input_shape, image_shape)
         boxes.append(_boxes)
@@ -471,7 +474,7 @@ def yolo_eval(yolo_outputs,
     return boxes_, scores_, classes_
 
 
-def preprocess_true_boxes(true_boxes, input_shape, anchors, num_classes, model_name=None):
+def preprocess_true_boxes(true_boxes, input_shape, anchors, num_classes, model_name=None, num_yolo_heads=None):
     '''Preprocess true boxes to training input format
 
     Parameters
@@ -488,8 +491,10 @@ def preprocess_true_boxes(true_boxes, input_shape, anchors, num_classes, model_n
 
     '''
     assert (true_boxes[..., 4]<num_classes).all(), 'class id must be less than num_classes'
-    num_layers = len(anchors)//3 # default setting
-    anchor_mask = [[6,7,8], [3,4,5], [0,1,2]] if num_layers==3 else [[3,4,5], [1,2,3]]
+    # num_layers = len(anchors)//3 # default setting #TO-DO #TO-FIX
+    # anchor_mask = [[6,7,8], [3,4,5], [0,1,2]] if num_layers==3 else [[3,4,5], [1,2,3]] # BUG
+    num_anchors_per_head = len(anchors) // num_yolo_heads
+    anchor_mask = np.arange(len(anchors)).reshape(-1,num_anchors_per_head)[::-1].tolist() # dynamic mask
 
     true_boxes = np.array(true_boxes, dtype='float32')
     input_shape = np.array(input_shape, dtype='int32')
@@ -500,14 +505,14 @@ def preprocess_true_boxes(true_boxes, input_shape, anchors, num_classes, model_n
 
     m = true_boxes.shape[0]
     if model_name == 'yolo_small_objs':
-        grid_shapes = [input_shape//{0:32, 1:16, 2:4}[l] for l in range(num_layers)] #small-objs
+        grid_shapes = [input_shape//{0:32, 1:16, 2:4}[l] for l in range(num_yolo_heads)] #small-objs
     elif model_name == 'tiny_yolo_small_objs':
-        grid_shapes = [input_shape//{0:32, 1:8}[l] for l in range(num_layers)] #small-objs
+        grid_shapes = [input_shape//{0:32, 1:8}[l] for l in range(num_yolo_heads)] #small-objs
     else:
-        grid_shapes = [input_shape//{0:32, 1:16, 2:8}[l] for l in range(num_layers)]
+        grid_shapes = [input_shape//{0:32, 1:16, 2:8}[l] for l in range(num_yolo_heads)]
 
     y_true = [np.zeros((m,grid_shapes[l][0],grid_shapes[l][1],len(anchor_mask[l]),5+num_classes),
-        dtype='float32') for l in range(num_layers)]
+        dtype='float32') for l in range(num_yolo_heads)]
 
     # Expand dim to apply broadcasting.
     anchors = np.expand_dims(anchors, 0)
@@ -536,7 +541,7 @@ def preprocess_true_boxes(true_boxes, input_shape, anchors, num_classes, model_n
         best_anchor = np.argmax(iou, axis=-1)
 
         for t, n in enumerate(best_anchor):
-            for l in range(num_layers):
+            for l in range(num_yolo_heads):
                 if n in anchor_mask[l]:
                     i = np.floor(true_boxes[b,t,0]*grid_shapes[l][1]).astype('int32')
                     j = np.floor(true_boxes[b,t,1]*grid_shapes[l][0]).astype('int32')
@@ -590,7 +595,7 @@ def box_iou(b1, b2):
     return iou
 
 
-def yolo_loss(args, anchors, num_classes, ignore_thresh=.5, model_name=None, print_loss=False):
+def yolo_loss(args, anchors, num_classes, ignore_thresh=.5, model_name=None, num_yolo_heads=None, print_loss=False):
     '''Return yolo_loss tensor
 
     Parameters
@@ -606,29 +611,34 @@ def yolo_loss(args, anchors, num_classes, ignore_thresh=.5, model_name=None, pri
     loss: tensor, shape=(1,)
 
     '''
-    num_layers = len(anchors)//3 # default setting
-    num_outputs = num_layers
+    # num_yolo_heads = len(anchors)//3 # 3 -> default number of anchors per cell
+    num_outputs = num_yolo_heads
     #old style
     # if model_name in ['tiny_yolo_infusion','yolo_infusion']:
     #     #add segmentation output layer.
-    #     num_outputs = num_layers + 1
+    #     num_outputs = num_heads + 1
     # elif model_name in ['tiny_yolo_infusion_hydra']:
     #     #add segmentation output layer.
-    #     num_outputs = num_layers + 2
+    #     num_outputs = num_heads + 2
     #new style: keep commented.
 
     #args => head_a, head_b, seg, input_a, input_b
     yolo_outputs = args[:num_outputs] #head_a, head_b, seg_output
     y_true = args[num_outputs:] #input_a,input_b, input_seg
-    anchor_mask = [[6,7,8], [3,4,5], [0,1,2]] if num_layers==3 else [[3,4,5], [1,2,3]]
+
+    # anchor_mask = [[6,7,8], [3,4,5], [0,1,2]] if num_heads==3 else [[3,4,5], [1,2,3]] # -> BUG
+    # anchor_mask = [[6,7,8], [3,4,5], [0,1,2]] if num_heads==3 else [[3,4,5], [0,1,2]]
+    num_anchors_per_head = len(anchors) // num_yolo_heads
+    anchor_mask = np.arange(len(anchors)).reshape(-1,num_anchors_per_head)[::-1] # dynamic mask
+
     input_shape = K.cast(K.shape(yolo_outputs[0])[1:3] * 32, K.dtype(y_true[0]))
-    grid_shapes = [K.cast(K.shape(yolo_outputs[l])[1:3], K.dtype(y_true[0])) for l in range(num_layers)]
+    grid_shapes = [K.cast(K.shape(yolo_outputs[l])[1:3], K.dtype(y_true[0])) for l in range(num_yolo_heads)]
     loss = 0
     m = K.shape(yolo_outputs[0])[0] # batch size, tensor
     mf = K.cast(m, K.dtype(yolo_outputs[0]))
     # print('k.eval',K.eval(mf))
 
-    for l in range(num_layers):
+    for l in range(num_yolo_heads):
         object_mask = y_true[l][..., 4:5]
         true_class_probs = y_true[l][..., 5:]
 

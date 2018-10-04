@@ -15,6 +15,8 @@ anchors_path: model_data/tiny_yolo_anchors.txt
 # anchors_path: model_data/pti_tiny_640x480_anchors.txt
 # anchors_path: model_data/pti_tiny_416x416_anchors.txt
 model_name: tiny_yolo
+input_width: 640
+input_height: 480
 pretrained_weights_path: model_data/yolov3-tiny.h5
 log_dir: logs/default-tiny-015
 epochs_freezed: 0

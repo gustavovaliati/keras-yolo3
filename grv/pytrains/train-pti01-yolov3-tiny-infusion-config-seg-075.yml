@@ -15,9 +15,12 @@ input_width: 640
 input_height: 480
 pretrained_weights_path: model_data/yolov3-tiny.h5
 # pretrained_weights_path: logs/default-tiny-005-again/ep029-loss13.310-val_loss12.890.h5
-log_dir: logs/seg-073/
+log_dir: logs/seg-075
 epochs_freezed: 0
 batch_size_freezed: 2
 epochs_unfreezed: 100
 batch_size_unfreezed: 2
-short_comment: lr0.0001_with-batchnorm_relu8_640x480net_new-style-loss_loss-weight-seg0.2_no-softmax
+data_augmentation: False
+#same as seg-074 but removing random from data generation.
+#lr0.0001_with-batchnorm_relu8_640x480net_new-style-loss_loss-weight-seg0.2
+short_comment: removing-random

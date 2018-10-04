@@ -15,7 +15,7 @@ import math
 import tensorflow as tf
 from keras.backend.tensorflow_backend import set_session
 config = tf.ConfigProto()
-config.gpu_options.per_process_gpu_memory_fraction = 0.4
+config.gpu_options.per_process_gpu_memory_fraction = 0.5
 set_session(tf.Session(config=config))
 
 import numpy as np
@@ -88,10 +88,11 @@ class YOLO(object):
         self.score = 0.3
         self.iou = 0.45
         self.class_names = self._get_class()
+        self.num_yolo_heads = 3 if self.model_name in ['yolo', 'yolo_infusion'] else 2
         self.anchors = self._get_anchors()
         self.sess = K.get_session()
         # self.model_image_size = (416, 416) # fixed size or (None, None), hw
-        self.model_image_size = (480,640) # fixed size or (None, None), hw
+        self.model_image_size = (train_config['input_height'],train_config['input_width']) # fixed size or (None, None), hw
         self.boxes, self.scores, self.classes = self.generate()
 
     def _get_class(self):
@@ -106,7 +107,12 @@ class YOLO(object):
         with open(anchors_path) as f:
             anchors = f.readline()
         anchors = [float(x) for x in anchors.split(',')]
-        return np.array(anchors).reshape(-1, 2)
+        if len(anchors) % 2 != 0:
+            raise Exception('The anchors should be in pairs.')
+        anchors = np.array(anchors).reshape(-1, 2)
+        if len(anchors) % self.num_yolo_heads != 0:
+            raise Exception('The number of anchors is incompatible to the number of heads. Should be multiple of {}'.format(self.num_yolo_heads))
+        return anchors
 
     def generate(self):
         if self.model_path:
@@ -116,39 +122,39 @@ class YOLO(object):
         # Load model, or construct model and load weights.
         num_anchors = len(self.anchors)
         num_classes = len(self.class_names)
-        is_tiny_version = num_anchors==6 # default setting
+        is_tiny_version = True if self.model_name in ['tiny_yolo', 'tiny_yolo_infusion'] else False
         if self.model_name == 'tiny_yolo_infusion':
             print('Loading model weights', self.model_path)
             #old style
             # self.yolo_model = tiny_yolo_infusion_body(Input(shape=(None,None,3)), num_anchors//2, num_classes)
             ## self.yolo_model.load_weights(self.model_path, by_name=True)
             #new style
-            yolo_model, connection_layer = tiny_yolo_infusion_body(Input(shape=(None,None,3)), num_anchors//2, num_classes)
+            yolo_model, connection_layer = tiny_yolo_infusion_body(Input(shape=(None,None,3)), num_anchors//self.num_yolo_heads, num_classes)
             seg_output = infusion_layer(connection_layer)
             self.yolo_model = Model(inputs=yolo_model.input, outputs=[*yolo_model.output, seg_output])
             # self.yolo_model.load_weights(self.model_path, by_name=True)
         elif self.model_name == 'tiny_yolo_infusion_hydra':
             #old style
-            self.yolo_model = tiny_yolo_infusion_hydra_body(Input(shape=(None,None,3)), num_anchors//2, num_classes)
+            self.yolo_model = tiny_yolo_infusion_hydra_body(Input(shape=(None,None,3)), num_anchors//self.num_yolo_heads, num_classes)
             # self.yolo_model.load_weights(self.model_path, by_name=True)
             #new style
             #not implemented yet
         elif self.model_name == 'yolo_infusion':
             print('Loading model weights', self.model_path)
-            yolo_model, seg_output = yolo_infusion_body(Input(shape=(None,None,3)), num_anchors//3, num_classes)
+            yolo_model, seg_output = yolo_infusion_body(Input(shape=(None,None,3)), num_anchors//self.num_yolo_heads, num_classes)
             self.yolo_model = Model(inputs=yolo_model.input, outputs=[*yolo_model.output, seg_output])
             # self.yolo_model.load_weights(self.model_path, by_name=True)
         else:
             if self.model_name == 'yolo_small_objs':
-                self.yolo_model = yolo_body_for_small_objs(Input(shape=(None,None,3)), num_anchors//3, num_classes)
+                self.yolo_model = yolo_body_for_small_objs(Input(shape=(None,None,3)), num_anchors//self.num_yolo_heads, num_classes)
             elif self.model_name == 'tiny_yolo_small_objs':
-                self.yolo_model = tiny_yolo_small_objs_body(Input(shape=(None,None,3)), num_anchors//2, num_classes)
+                self.yolo_model = tiny_yolo_small_objs_body(Input(shape=(None,None,3)), num_anchors//self.num_yolo_heads, num_classes)
             else:
                 try:
                     self.yolo_model = load_model(model_path, compile=False)
                 except:
-                    self.yolo_model = tiny_yolo_body(Input(shape=(None,None,3)), num_anchors//2, num_classes) \
-                        if is_tiny_version else yolo_body(Input(shape=(None,None,3)), num_anchors//3, num_classes)
+                    self.yolo_model = tiny_yolo_body(Input(shape=(None,None,3)), num_anchors//self.num_yolo_heads, num_classes) \
+                        if is_tiny_version else yolo_body(Input(shape=(None,None,3)), num_anchors//self.num_yolo_heads, num_classes)
                     # self.yolo_model.load_weights(self.model_path) # make sure model, anchors and classes match
                 else:
                     assert self.yolo_model.layers[-1].output_shape[-1] == \

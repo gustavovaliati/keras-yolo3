@@ -8,6 +8,7 @@ from raven import Client
 import datetime
 import os
 from pathlib import Path
+import re
 
 ap = argparse.ArgumentParser()
 ap.add_argument("-g", "--config_path",
@@ -49,39 +50,28 @@ from yolo3.model import (preprocess_true_boxes, yolo_body, tiny_yolo_body, yolo_
     yolo_body_for_small_objs, tiny_yolo_small_objs_body)
 from yolo3.utils import get_random_data
 
-
-
-
-
 def _main(train_config):
-    # annotation_path = 'train.txt'
-    # annotation_path = 'train_pti01_6342imgs_v20180706193526_keras.txt'
     annotation_path = train_config['train_path']
-    # log_dir = 'logs/000/'
     log_dir = train_config['log_dir']
-    # classes_path = 'model_data/voc_classes.txt'
-    # classes_path = 'model_data/pti_classes.txt'
     classes_path = train_config['classes_path']
-    # anchors_path = 'model_data/yolo_anchors.txt'
     anchors_path = train_config['anchors_path']
     model_name = train_config['model_name']
     class_names = get_classes(classes_path)
     num_classes = len(class_names)
     print('num_classes', num_classes)
-    anchors = get_anchors(anchors_path)
+    num_yolo_heads = 3 if model_name in ['yolo', 'yolo_infusion'] else 2 #This is the number of specifically YOLO heads which predict bboxes. Not counting infusion, etc.
+    print('number of yolo heads', num_yolo_heads)
+    anchors = get_anchors(anchors_path, num_yolo_heads)
     freeze_body = 1
     pretrained_weights_path = ARGS.pretrained_weights if ARGS.pretrained_weights else train_config['pretrained_weights_path']
+    input_shape = (int(train_config['input_height']),int(train_config['input_width']))
 
-    # input_shape = (416,416) # multiple of 32, hw
-    input_shape = (480,640)
-
-    is_tiny_version = len(anchors)==6 # default setting
-    if is_tiny_version:
+    if model_name in ['tiny_yolo', 'tiny_yolo_infusion']:
         model = create_tiny_model(input_shape, anchors, num_classes, load_pretrained=True,
-            freeze_body=freeze_body, weights_path=pretrained_weights_path, model_name=model_name)
+            freeze_body=freeze_body, weights_path=pretrained_weights_path, model_name=model_name, num_yolo_heads=num_yolo_heads)
     else:
         model = create_model(input_shape, anchors, num_classes, load_pretrained=True,
-            freeze_body=freeze_body, weights_path=pretrained_weights_path, model_name=model_name) # make sure you know what you freeze
+            freeze_body=freeze_body, weights_path=pretrained_weights_path, model_name=model_name, num_yolo_heads=num_yolo_heads) # make sure you know what you freeze
 
     # print(model.summary())
 
@@ -100,10 +90,6 @@ def _main(train_config):
     num_val = int(len(lines)*val_split)
     num_train = len(lines) - num_val
 
-    # seg_shape = (13,13)
-    # seg_shape = (15,20)
-    # seg_shape = (26,26)
-
     # Train with frozen layers first, to get a stable loss.
     # Adjust num epochs to your dataset. This step is enough to obtain a not bad model.
     batch_size_freezed = train_config['batch_size_freezed']
@@ -112,9 +98,9 @@ def _main(train_config):
         compile_model(model, model_name)
         print('Train on {} samples, val on {} samples, with batch size {}.'.format(num_train, num_val, batch_size_freezed))
         model.fit_generator(
-                data_generator_wrapper(lines[:num_train], batch_size_freezed, input_shape, anchors, num_classes, model_name),
+                data_generator_wrapper(lines[:num_train], batch_size_freezed, input_shape, anchors, num_classes, model_name, num_yolo_heads),
                 steps_per_epoch=max(1, num_train//batch_size_freezed),
-                validation_data=data_generator_wrapper(lines[num_train:], batch_size_freezed, input_shape, anchors, num_classes, model_name),
+                validation_data=data_generator_wrapper(lines[num_train:], batch_size_freezed, input_shape, anchors, num_classes, model_name, num_yolo_heads),
                 validation_steps=max(1, num_val//batch_size_freezed),
                 epochs=epochs_freezed,
                 initial_epoch=0,
@@ -137,9 +123,9 @@ def _main(train_config):
         epochs_unfreezed = train_config['epochs_unfreezed']
         print('Train on {} samples, val on {} samples, with batch size {}.'.format(num_train, num_val, batch_size_unfreezed))
         model.fit_generator(
-            data_generator_wrapper(lines[:num_train], batch_size_unfreezed, input_shape, anchors, num_classes, model_name),
+            data_generator_wrapper(lines[:num_train], batch_size_unfreezed, input_shape, anchors, num_classes, model_name, num_yolo_heads),
             steps_per_epoch=max(1, num_train//batch_size_unfreezed),
-            validation_data=data_generator_wrapper(lines[num_train:], batch_size_unfreezed, input_shape, anchors, num_classes, model_name),
+            validation_data=data_generator_wrapper(lines[num_train:], batch_size_unfreezed, input_shape, anchors, num_classes, model_name, num_yolo_heads),
             validation_steps=max(1, num_val//batch_size_unfreezed),
             epochs=epochs_freezed + epochs_unfreezed,
             initial_epoch=epochs_freezed,
@@ -165,8 +151,8 @@ def compile_model(model, model_name):
             optimizer=Adam(lr=1e-4),
             loss={
                 'yolo_loss': lambda y_true, y_pred: y_pred, #I guess this is a dumb operation. Does nothing
-                # 'seg_output' : 'categorical_crossentropy'
-                'seg_output' : 'binary_crossentropy'
+                'seg_output' : 'categorical_crossentropy'
+                # 'seg_output' : 'binary_crossentropy'
             },
             loss_weights={'yolo_loss': 1., 'seg_output': 0.2} #updating yolo_loss may not affect.
             )
@@ -194,16 +180,21 @@ def get_classes(classes_path):
     class_names = [c.strip() for c in class_names]
     return class_names
 
-def get_anchors(anchors_path):
+def get_anchors(anchors_path, num_yolo_heads):
     '''loads the anchors from a file'''
     with open(anchors_path) as f:
         anchors = f.readline()
     anchors = [float(x) for x in anchors.split(',')]
-    return np.array(anchors).reshape(-1, 2)
+    if len(anchors) % 2 != 0:
+        raise Exception('The anchors should be in pairs.')
+    anchors = np.array(anchors).reshape(-1, 2)
+    if len(anchors) % num_yolo_heads != 0:
+        raise Exception('The number of anchors is incompatible to the number of heads. Should be multiple of {}'.format(num_yolo_heads))
+    return anchors
 
 
 def create_model(input_shape, anchors, num_classes, load_pretrained=True, freeze_body=2,
-            weights_path='model_data/yolo_weights.h5', model_name=None):
+            weights_path='model_data/yolo_weights.h5', model_name=None, num_yolo_heads=None):
     '''create the training model'''
     K.clear_session() # get a new session
     image_input = Input(shape=(None, None, 3))
@@ -234,7 +225,8 @@ def create_model(input_shape, anchors, num_classes, load_pretrained=True, freeze
                 'anchors': anchors,
                 'num_classes': num_classes,
                 'ignore_thresh': 0.5,
-                'model_name': model_name
+                'model_name': model_name,
+                'num_yolo_heads': num_yolo_heads
             })([*model_body.output, *y_true])
         model = Model([model_body.input, *y_true], outputs=[model_loss, seg_output])
         print(model.summary())
@@ -261,14 +253,14 @@ def create_model(input_shape, anchors, num_classes, load_pretrained=True, freeze
                 print('Freeze the first {} layers of total {} layers.'.format(num, len(model_body.layers)))
 
         model_loss = Lambda(yolo_loss, output_shape=(1,), name='yolo_loss',
-            arguments={'anchors': anchors, 'num_classes': num_classes, 'ignore_thresh': 0.5})(
+            arguments={'anchors': anchors, 'num_classes': num_classes, 'ignore_thresh': 0.5, 'num_yolo_heads': num_yolo_heads})(
             [*model_body.output, *y_true])
         model = Model([model_body.input, *y_true], model_loss)
 
         return model
 
 def create_tiny_model(input_shape, anchors, num_classes, load_pretrained=True, freeze_body=2,
-            weights_path='model_data/tiny_yolo_weights.h5', model_name=None):
+            weights_path='model_data/tiny_yolo_weights.h5', model_name=None, num_yolo_heads=None):
     '''create the training model, for Tiny YOLOv3'''
     K.clear_session() # get a new session
     image_input = Input(shape=(None, None, 3))
@@ -343,6 +335,7 @@ def create_tiny_model(input_shape, anchors, num_classes, load_pretrained=True, f
                             'num_classes': num_classes,
                             'ignore_thresh': 0.7,
                             'model_name': model_name,
+                            'num_yolo_heads': num_yolo_heads,
                             'print_loss': False
                         }
                     )([*model_body.output, *y_true_input])#this is calling yolo_loss and these are the args.
@@ -390,7 +383,9 @@ def create_tiny_model(input_shape, anchors, num_classes, load_pretrained=True, f
                         arguments={
                             'anchors': anchors,
                             'num_classes': num_classes,
-                            'ignore_thresh': 0.7
+                            'ignore_thresh': 0.7,
+                            'num_yolo_heads': num_yolo_heads,
+                            'model_name' : model_name
                         }
                     )([*model_body.output, *y_true])
 
@@ -400,7 +395,7 @@ def create_tiny_model(input_shape, anchors, num_classes, load_pretrained=True, f
     else:
         raise Exception('unknown model.')
 
-def data_generator(annotation_lines, batch_size, input_shape, anchors, num_classes, model_name=None):
+def data_generator(annotation_lines, batch_size, input_shape, anchors, num_classes, model_name=None, num_yolo_heads=None):
     '''data generator for fit_generator'''
     n = len(annotation_lines)
     i = 0
@@ -411,7 +406,7 @@ def data_generator(annotation_lines, batch_size, input_shape, anchors, num_class
         for b in range(batch_size):
             if i==0:
                 np.random.shuffle(annotation_lines)
-            image, box, seg = get_random_data(annotation_lines[i], input_shape, random=True, model_name=model_name)
+            image, box, seg = get_random_data(annotation_lines[i], input_shape, random=train_config['data_augmentation'], model_name=model_name)
             image_data.append(image)
             box_data.append(box)
             seg_data.append(seg)
@@ -419,7 +414,7 @@ def data_generator(annotation_lines, batch_size, input_shape, anchors, num_class
         image_data = np.array(image_data)
         box_data = np.array(box_data)
         y_seg_data = np.array(seg_data)
-        y_true = preprocess_true_boxes(box_data, input_shape, anchors, num_classes, model_name=model_name)
+        y_true = preprocess_true_boxes(box_data, input_shape, anchors, num_classes, model_name=model_name, num_yolo_heads=num_yolo_heads)
 
         if model_name in ['tiny_yolo_infusion', 'yolo_infusion']:
             #old style
@@ -444,10 +439,10 @@ def data_generator(annotation_lines, batch_size, input_shape, anchors, num_class
         else:
             raise Exception('unknown model.')
 
-def data_generator_wrapper(annotation_lines, batch_size, input_shape, anchors, num_classes, model_name=None):
+def data_generator_wrapper(annotation_lines, batch_size, input_shape, anchors, num_classes, model_name=None, num_yolo_heads=None):
     n = len(annotation_lines)
     if n==0 or batch_size<=0: return None
-    return data_generator(annotation_lines, batch_size, input_shape, anchors, num_classes, model_name)
+    return data_generator(annotation_lines, batch_size, input_shape, anchors, num_classes, model_name, num_yolo_heads=num_yolo_heads)
 
 if __name__ == '__main__':
 
@@ -460,6 +455,16 @@ if __name__ == '__main__':
     with open(ARGS.config_path, 'r') as stream:
         train_config = yaml.load(stream)
     print(train_config)
+
+    experiment_number_regex = re.compile('[0-9]{3}.yml')
+    m = experiment_number_regex.search(os.path.basename(ARGS.config_path))
+    if m:
+        experiment_number_str = m.group().replace('.yml','')
+    else:
+        raise Exception("Could not find the experiment number in the config file name.")
+
+    if not train_config['log_dir'].endswith(experiment_number_str):
+        raise Exception("The experiment number from the log_dir in the config file does not match the config file name.")
 
     output_version = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
     #infer_logdir_epochs_dataset_outputversion
