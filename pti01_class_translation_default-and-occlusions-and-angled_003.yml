@@ -1,0 +1,10 @@
+#Discard other classes than the no-ocl,normal-ocl,severe-ocl,angled
+#current_class: new_class
+person-no-ocl: person-no-ocl
+person-normal-ocl: person-normal-ocl
+person-severe-ocl: person-severe-ocl
+person-head: discard
+person-body-part: discard
+person-top-view: discard
+person-angled: person-angled
+person-far: discard

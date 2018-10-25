@@ -15,7 +15,7 @@ import math
 import tensorflow as tf
 from keras.backend.tensorflow_backend import set_session
 config = tf.ConfigProto()
-config.gpu_options.per_process_gpu_memory_fraction = 0.5
+config.gpu_options.per_process_gpu_memory_fraction = 0.45
 set_session(tf.Session(config=config))
 
 import numpy as np
@@ -27,7 +27,8 @@ from PIL import Image, ImageFont, ImageDraw
 from yolo3.model import (yolo_eval, yolo_body, tiny_yolo_body,
     tiny_yolo_infusion_body, infusion_layer, yolo_infusion_body, tiny_yolo_infusion_hydra_body,
     yolo_body_for_small_objs, tiny_yolo_small_objs_body)
-from yolo3.utils import letterbox_image
+from yolo3.utils import letterbox_image, get_random_data, get_classes, translate_classes, calc_annot_lines_md5
+
 import os,datetime
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 from keras.utils import multi_gpu_model
@@ -354,11 +355,11 @@ def get_canonical_bboxes(original_bboxes, img_width, img_height, round_type='nor
 
     return canonical_bboxes
 
-def detect_img(yolo,output_path):
+def detect_img(yolo,output_path,test_path):
     result_detections = []
     result_images = []
 
-    test_annotations = train_config['test_path']
+    test_annotations = test_path
     with open(test_annotations,'r') as annot_f:
             for annotation in tqdm(annot_f):
                 try:
@@ -420,8 +421,47 @@ def detect_img(yolo,output_path):
 
     # yolo.close_session()
 
+def translated_gt_if_needed():
+    if 'class_translation_path' in train_config and train_config['class_translation_path']:
+        print('Translating dataset classes...')
+        with open(train_config['class_translation_path'], 'r') as stream:
+            class_translation_config = yaml.load(stream)
+
+        with open(train_config['test_path']) as f:
+            lines = f.readlines()
+
+        class_names = get_classes(train_config['classes_path'])
+        lines = translate_classes(lines,class_names,class_translation_config)
+        print('Translation is done. Now we want to save the new translated dataset version.')
+        annotation_path_translated = train_config['test_path'].replace('.txt', '_'+train_config['class_translation_path'].replace('.yml', '.txt'))
+        if os.path.exists(annotation_path_translated):
+            print('Seems like this translation has already been done before.')
+            already_present_translation_on_disk_lines = open(annotation_path_translated, 'r').readlines()
+            disk_md5 = calc_annot_lines_md5(already_present_translation_on_disk_lines)
+            disk_md52 = calc_annot_lines_md5(already_present_translation_on_disk_lines)
+            current_translated_md5 = calc_annot_lines_md5(lines)
+            print('Checking translation version...')
+            if disk_md5 == current_translated_md5:
+                print('Disk translation version matches the current generated one. Lets procced to training.')
+            else:
+                print('Disk translation version is different from the current one. Seems like the translation code has changed.')
+                print('Do backup the disk annotation translated file and properly document it, and move to some other folder: ', annotation_path_translated)
+                raise Exception('Disk and current class translations missmatch versions. Cannot proceed.')
+        else:
+            with open(annotation_path_translated, 'w') as output_f:
+                print('Writting the new translated annotation file to', annotation_path_translated)
+                for annot_line in lines:
+                    output_f.write(annot_line + '\n')
+
+        return annotation_path_translated
+    else:
+        #no translation needed
+        return train_config['test_path']
+
+
 if __name__ == '__main__':
 
+    test_annot_path = translated_gt_if_needed()
     weights_paths = glob.glob(os.path.join(train_config['log_dir'],'*.h5'))
     weights_paths.sort()
     output_version = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
@@ -448,6 +488,9 @@ if __name__ == '__main__':
                 The final_weight will match this.
                 '''
                 pass
+        if 'trained_weights_stage_1.h5' in weight:
+            #We normally do not want to infer this model. This is the final weight for the freezing stage.
+            continue
 
 
         #infer_logdir_epochs_dataset_outputversion
@@ -467,6 +510,6 @@ if __name__ == '__main__':
         else:
             print('Loading weights:', weight)
             yolo.yolo_model.load_weights(weight, by_name=True)
-            detect_img(yolo,output_path=output_path)
+            detect_img(yolo,output_path=output_path, test_path=test_annot_path)
 
     yolo.close_session()

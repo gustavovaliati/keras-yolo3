@@ -1,0 +1,27 @@
+dataset_name: pti01
+# train_path: train_pti01_6342imgs_v20180706193526_keras.txt
+# test_path: test_pti01_1585imgs_v20180706193526_keras.txt
+# train_path: train_pti01_6342imgs_v20180706193526_keras.txt_new-ratio_round-type-normal_side-ajustment-one.txt
+# test_path: test_pti01_1585imgs_v20180706193526_keras.txt_new-ratio_round-type-normal_side-ajustment-one.txt
+# train_path: train_pti01_v20180925220014_keras.txt
+# test_path: test_pti01_v20180925220014_keras.txt
+train_path: train_pti01_v20180925220014_keras.txt_new-ratio_round-type-normal_side-ajustment-one.txt
+test_path: test_pti01_v20180925220014_keras.txt_new-ratio_round-type-normal_side-ajustment-one.txt
+# train_path: train_pti01_v20180925220014.txt_min-height-100.txt
+# test_path: test_pti01_v20180925220014.txt_min-height-100.txt
+classes_path: model_data/pti_classes.txt
+# anchors_path: model_data/yolo_anchors.txt
+anchors_path: model_data/yolo_anchors_k3.txt
+model_name: yolo
+input_width: 640
+input_height: 480
+pretrained_weights_path: model_data/yolov3.h5
+data_augmentation: flip_only
+log_dir: logs/default-013
+batch_size_freezed: 2
+epochs_freezed: 1
+batch_size_unfreezed: 2
+epochs_unfreezed: 100
+#lr0.0001
+#same as 006, but trying dataset with bboxes with height above 100
+short_comment: k3_fliponly_canonical

@@ -1,0 +1,24 @@
+dataset_name: pti01
+# train_path: train_pti01_v20181018205401_keras.txt
+# test_path: test_pti01_v20181018205401_keras.txt
+train_path: train_pti01_v20181018205450_keras.txt
+test_path: test_pti01_v20181018205450_only-C_ED4A-03_C_ED4A-02_C_BLC03-08_keras.txt
+# train_path: train_pti01_v20181018205505_keras.txt
+# test_path: test_pti01_v20181018205505_only-C_ED4A-03_C_ED4A-02_C_BLC03-08_C_BLC13-13_C_BLC10-11_keras.txt
+# train_path: train_pti01_v20181018205526_keras.txt
+# test_path: test_pti01_v20181018205526_only-C_ED4A-03_keras.txt
+classes_path: model_data/pti_classes.txt
+# class_translation_path: pti01_class_translation_discard-far-and-merge_001.yml
+class_translation_path: pti01_class_translation_one-class_004.yml
+anchors_path: model_data/yolo_anchors_k3.txt
+model_name: yolo
+input_width: 640
+input_height: 480
+pretrained_weights_path: model_data/yolov3.h5
+data_augmentation: flip_only
+log_dir: logs/default-024
+batch_size_freezed: 2
+epochs_freezed: 1
+batch_size_unfreezed: 2
+epochs_unfreezed: 100
+short_comment: default_pti01_v3_leave-3-out_checking-translations_one-class

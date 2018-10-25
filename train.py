@@ -48,7 +48,7 @@ from keras.callbacks import TensorBoard, ModelCheckpoint, ReduceLROnPlateau, Ear
 from yolo3.model import (preprocess_true_boxes, yolo_body, tiny_yolo_body, yolo_loss,
     tiny_yolo_infusion_body, infusion_layer, yolo_infusion_body, tiny_yolo_infusion_hydra_body,
     yolo_body_for_small_objs, tiny_yolo_small_objs_body)
-from yolo3.utils import get_random_data
+from yolo3.utils import get_random_data, get_classes, translate_classes, calc_annot_lines_md5
 
 def _main(train_config):
     annotation_path = train_config['train_path']
@@ -79,11 +79,39 @@ def _main(train_config):
     checkpoint = ModelCheckpoint(os.path.join(log_dir, 'ep{epoch:03d}-loss{loss:.3f}-val_loss{val_loss:.3f}.h5'),
         monitor='val_loss', save_weights_only=True, save_best_only=True, period=1)
     reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=3, verbose=1)
-    early_stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=10, verbose=1)
+    early_stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=5, verbose=1)
 
     val_split = 0.1
     with open(annotation_path) as f:
         lines = f.readlines()
+
+    if 'class_translation_path' in train_config and train_config['class_translation_path']:
+        print('Translating dataset classes...')
+        with open(train_config['class_translation_path'], 'r') as stream:
+            class_translation_config = yaml.load(stream)
+
+        lines = translate_classes(lines,class_names,class_translation_config)
+        print('Translation is done. Now we want to save the new translated dataset version.')
+        annotation_path_translated = annotation_path.replace('.txt', '_'+train_config['class_translation_path'].replace('.yml', '.txt'))
+        if os.path.exists(annotation_path_translated):
+            print('Seems like this translation has already been done before.')
+            already_present_translation_on_disk_lines = open(annotation_path_translated, 'r').readlines()
+            disk_md5 = calc_annot_lines_md5(already_present_translation_on_disk_lines)
+            disk_md52 = calc_annot_lines_md5(already_present_translation_on_disk_lines)
+            current_translated_md5 = calc_annot_lines_md5(lines)
+            print('Checking translation version...')
+            if disk_md5 == current_translated_md5:
+                print('Disk translation version matches the current generated one. Lets procced to training.')
+            else:
+                print('Disk translation version is different from the current one. Seems like the translation code has changed.')
+                print('Do backup the disk annotation translated file and properly document it, and move to some other folder: ', annotation_path_translated)
+                raise Exception('Disk and current class translations missmatch versions. Cannot proceed.')
+        else:
+            with open(annotation_path_translated, 'w') as output_f:
+                print('Writting the new translated annotation file to', annotation_path_translated)
+                for annot_line in lines:
+                    output_f.write(annot_line + '\n')
+
     np.random.seed(10101)
     np.random.shuffle(lines)
     np.random.seed(None)
@@ -134,8 +162,10 @@ def _main(train_config):
 
     # Further training if needed.
 
+
 def compile_model(model, model_name):
     print('model_name',model_name)
+    learning_rate = train_config['initial_lr'] if 'initial_lr' in train_config else 1e-4
 
     #old style
     # model.compile(
@@ -148,17 +178,17 @@ def compile_model(model, model_name):
     #new style
     if model_name in ['tiny_yolo_infusion', 'yolo_infusion']:
         model.compile(
-            optimizer=Adam(lr=1e-4),
+            optimizer=Adam(lr=learning_rate),
             loss={
                 'yolo_loss': lambda y_true, y_pred: y_pred, #I guess this is a dumb operation. Does nothing
                 'seg_output' : 'categorical_crossentropy'
                 # 'seg_output' : 'binary_crossentropy'
             },
-            loss_weights={'yolo_loss': 1., 'seg_output': 0.2} #updating yolo_loss may not affect.
+            loss_weights={'yolo_loss': 1., 'seg_output': train_config['seg_loss_weight']} #updating yolo_loss may not affect.
             )
     elif model_name in ['tiny_yolo_infusion_hydra']:
         model.compile(
-            optimizer=Adam(lr=1e-4),
+            optimizer=Adam(lr=learning_rate),
             loss={
                 'yolo_loss': lambda y_true, y_pred: y_pred, #I guess this is a dump operation. Does nothing
             },
@@ -166,19 +196,12 @@ def compile_model(model, model_name):
             )
     elif model_name in ['tiny_yolo', 'yolo']:
         model.compile(
-            optimizer=Adam(lr=1e-4),
+            optimizer=Adam(lr=learning_rate),
             loss={
                 'yolo_loss': lambda y_true, y_pred: y_pred,
             }) # recompile to apply the change
     else:
         raise Exception('The model_name is unknown: ', model_name)
-
-def get_classes(classes_path):
-    '''loads the classes'''
-    with open(classes_path) as f:
-        class_names = f.readlines()
-    class_names = [c.strip() for c in class_names]
-    return class_names
 
 def get_anchors(anchors_path, num_yolo_heads):
     '''loads the anchors from a file'''

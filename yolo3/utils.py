@@ -5,6 +5,7 @@ import math
 from PIL import Image
 import numpy as np
 from matplotlib.colors import rgb_to_hsv, hsv_to_rgb
+import hashlib
 # import matplotlib
 # matplotlib.use('Agg')
 # import matplotlib.pyplot as plt
@@ -49,7 +50,7 @@ def update_annotation(old_annotation_line, box_data):
 
     return new_annot
 
-def get_random_data(annotation_line, input_shape, random=True, max_boxes=20, jitter=.3, hue=.1, sat=1.5, val=1.5, proc_img=True, model_name=None, use_seg_mask_generator=False):
+def get_random_data(annotation_line, input_shape, random='full', max_boxes=20, jitter=.3, hue=.1, sat=1.5, val=1.5, proc_img=True, model_name=None, use_seg_mask_generator=False):
     '''random preprocessing for real-time data augmentation'''
     line = annotation_line.split()
     image = Image.open(line[0])
@@ -87,81 +88,126 @@ def get_random_data(annotation_line, input_shape, random=True, max_boxes=20, jit
         The get_seg_data already handles that.
         '''
         seg_data = None
-        if model_name in ['tiny_yolo_infusion']:
+        if model_name in ['tiny_yolo_infusion', 'yolo_infusion']:
             seg_data = get_seg_data(annotation_line, img_shape=(ih,iw), input_shape=input_shape, model_name=model_name, use_seg_mask_generator=use_seg_mask_generator)
 
         return image_data, box_data, seg_data
 
-    # resize image
-    new_ar = w/h * rand(1-jitter,1+jitter)/rand(1-jitter,1+jitter)
-    scale = rand(.25, 2)
-    if new_ar < 1:
-        nh = int(scale*h)
-        nw = int(nh*new_ar)
+    if random in ['flip_only']:
+        flip = rand()<.5
+
+        # resize image
+        scale = min(w/iw, h/ih)
+        nw = int(iw*scale)
+        nh = int(ih*scale)
+        dx = (w-nw)//2
+        dy = (h-nh)//2
+        image_data=0
+        if proc_img:
+            image = image.resize((nw,nh), Image.BICUBIC)
+            new_image = Image.new('RGB', (w,h), (128,128,128))
+            new_image.paste(image, (dx, dy))
+            if flip: new_image = new_image.transpose(Image.FLIP_LEFT_RIGHT)
+            image_data = np.array(new_image)/255.
+
+        # correct boxes
+        box_data = np.zeros((max_boxes,5))
+        if len(box)>0:
+            np.random.shuffle(box)
+            if len(box)>max_boxes: box = box[:max_boxes]
+            box[:, [0,2]] = box[:, [0,2]]*scale + dx
+            box[:, [1,3]] = box[:, [1,3]]*scale + dy
+
+            #fix flip
+            if flip: box[:, [0,2]] = w - box[:, [2,0]]
+
+            box_data[:len(box)] = box
+
+
+
+        '''
+        There is no need to update the annotation_line when the image is just resized.
+        The get_seg_data already handles that.
+        '''
+        seg_data = None
+        if model_name in ['tiny_yolo_infusion','yolo_infusion']:
+            seg_data = get_seg_data(annotation_line, img_shape=(ih,iw), input_shape=input_shape, model_name=model_name, use_seg_mask_generator=use_seg_mask_generator)
+
+        return image_data, box_data, seg_data
+
+    if random == 'full':
+        # resize image
+        new_ar = w/h * rand(1-jitter,1+jitter)/rand(1-jitter,1+jitter)
+        scale = rand(.25, 2)
+        if new_ar < 1:
+            nh = int(scale*h)
+            nw = int(nh*new_ar)
+        else:
+            nw = int(scale*w)
+            nh = int(nw/new_ar)
+        image = image.resize((nw,nh), Image.BICUBIC)
+
+        # place image
+        dx = int(rand(0, w-nw))
+        dy = int(rand(0, h-nh))
+        new_image = Image.new('RGB', (w,h), (128,128,128))
+        new_image.paste(image, (dx, dy))
+        image = new_image
+
+        # flip image or not
+        flip = rand()<.5
+        if flip: image = image.transpose(Image.FLIP_LEFT_RIGHT)
+
+        # distort image
+        hue = rand(-hue, hue)
+        sat = rand(1, sat) if rand()<.5 else 1/rand(1, sat)
+        val = rand(1, val) if rand()<.5 else 1/rand(1, val)
+        x = rgb_to_hsv(np.array(image)/255.)
+        x[..., 0] += hue
+        x[..., 0][x[..., 0]>1] -= 1
+        x[..., 0][x[..., 0]<0] += 1
+        x[..., 1] *= sat
+        x[..., 2] *= val
+        x[x>1] = 1
+        x[x<0] = 0
+        image_data = hsv_to_rgb(x) # numpy array, 0 to 1
+
+        # correct boxes
+        box_data = np.zeros((max_boxes,5))
+        if len(box)>0:
+            np.random.shuffle(box)
+            box[:, [0,2]] = box[:, [0,2]]*nw/iw + dx
+            box[:, [1,3]] = box[:, [1,3]]*nh/ih + dy
+            if flip: box[:, [0,2]] = w - box[:, [2,0]]
+            box[:, 0:2][box[:, 0:2]<0] = 0
+            box[:, 2][box[:, 2]>w] = w
+            box[:, 3][box[:, 3]>h] = h
+            box_w = box[:, 2] - box[:, 0]
+            box_h = box[:, 3] - box[:, 1]
+            box = box[np.logical_and(box_w>1, box_h>1)] # discard invalid box
+            if len(box)>max_boxes: box = box[:max_boxes]
+            box_data[:len(box)] = box
+
+        seg_data = None
+        if model_name in ['tiny_yolo_infusion','yolo_infusion']:
+            updated_annotation_line = update_annotation(annotation_line, box_data)
+            n_iw, n_ih = image.size
+            seg_data = get_seg_data(updated_annotation_line, img_shape=(n_ih,n_iw), input_shape=input_shape, model_name=model_name, use_seg_mask_generator=use_seg_mask_generator)
+        # plt.imshow(image_data)
+        # plt.savefig('image_data.jpg')
+        # plt.imshow(seg_data[:,:,0],cmap='jet')
+        # plt.savefig('fg_mask.jpg')
+        # plt.imshow(seg_data[:,:,1],cmap='jet')
+        # plt.savefig('bg_mask.jpg')
+        # print(annotation_line)
+        # print(updated_annotation_line)
+        # print(seg_data[:,:,0])
+        # import sys
+        # sys.exit()
+
+        return image_data, box_data, seg_data
     else:
-        nw = int(scale*w)
-        nh = int(nw/new_ar)
-    image = image.resize((nw,nh), Image.BICUBIC)
-
-    # place image
-    dx = int(rand(0, w-nw))
-    dy = int(rand(0, h-nh))
-    new_image = Image.new('RGB', (w,h), (128,128,128))
-    new_image.paste(image, (dx, dy))
-    image = new_image
-
-    # flip image or not
-    flip = rand()<.5
-    if flip: image = image.transpose(Image.FLIP_LEFT_RIGHT)
-
-    # distort image
-    hue = rand(-hue, hue)
-    sat = rand(1, sat) if rand()<.5 else 1/rand(1, sat)
-    val = rand(1, val) if rand()<.5 else 1/rand(1, val)
-    x = rgb_to_hsv(np.array(image)/255.)
-    x[..., 0] += hue
-    x[..., 0][x[..., 0]>1] -= 1
-    x[..., 0][x[..., 0]<0] += 1
-    x[..., 1] *= sat
-    x[..., 2] *= val
-    x[x>1] = 1
-    x[x<0] = 0
-    image_data = hsv_to_rgb(x) # numpy array, 0 to 1
-
-    # correct boxes
-    box_data = np.zeros((max_boxes,5))
-    if len(box)>0:
-        np.random.shuffle(box)
-        box[:, [0,2]] = box[:, [0,2]]*nw/iw + dx
-        box[:, [1,3]] = box[:, [1,3]]*nh/ih + dy
-        if flip: box[:, [0,2]] = w - box[:, [2,0]]
-        box[:, 0:2][box[:, 0:2]<0] = 0
-        box[:, 2][box[:, 2]>w] = w
-        box[:, 3][box[:, 3]>h] = h
-        box_w = box[:, 2] - box[:, 0]
-        box_h = box[:, 3] - box[:, 1]
-        box = box[np.logical_and(box_w>1, box_h>1)] # discard invalid box
-        if len(box)>max_boxes: box = box[:max_boxes]
-        box_data[:len(box)] = box
-
-    seg_data = None
-    if model_name in ['tiny_yolo_infusion']:
-        updated_annotation_line = update_annotation(annotation_line, box_data)
-        n_iw, n_ih = image.size
-        seg_data = get_seg_data(updated_annotation_line, img_shape=(n_ih,n_iw), input_shape=input_shape, model_name=model_name, use_seg_mask_generator=use_seg_mask_generator)
-    # plt.imshow(image_data)
-    # plt.savefig('image_data.jpg')
-    # plt.imshow(seg_data[:,:,0],cmap='jet')
-    # plt.savefig('fg_mask.jpg')
-    # plt.imshow(seg_data[:,:,1],cmap='jet')
-    # plt.savefig('bg_mask.jpg')
-    # print(annotation_line)
-    # print(updated_annotation_line)
-    # print(seg_data[:,:,0])
-    # import sys
-    # sys.exit()
-
-    return image_data, box_data, seg_data
+        raise Exception('The specified data augmentation method is not recognized:', random)
 
 def old_get_random_data(annotation_line, input_shape, random=True, max_boxes=20, jitter=.3, hue=.1, sat=1.5, val=1.5, proc_img=True, seg_shape=None):
     '''random preprocessing for real-time data augmentation'''
@@ -360,3 +406,53 @@ def get_seg_data(annotation_line, img_shape, input_shape, model_name=None, use_s
 
     else:
         raise Exception('Unknown model name')
+
+def build_class_translation_map(classes, translation_config):
+    print('Building class translation...')
+    print('Original[id] -> New[id]')
+    mapping = []
+    for class_id, class_name in enumerate(classes):
+        if class_name not in translation_config:
+            raise Exception('Class translation: missing translation config for ', class_name)
+        new_class_name = translation_config[class_name]
+        if new_class_name == 'discard':
+            mapping.append(-1)
+            print('{}[id {}] -> discarded'.format(class_name,class_id))
+        else:
+            if new_class_name not in classes:
+                raise Exception('Class translation: class name in config is not present in the classes file.')
+            new_class_id = int(classes.index(new_class_name))
+            print('{}[id {}] -> {}[id {}]'.format(class_name,class_id,new_class_name,new_class_id))
+            # in the array of position class_id there will be the new_class_id.
+            mapping.append(new_class_id)
+    return mapping
+
+
+def translate_classes(lines, classes, translation_config):
+    new_lines= []
+    class_mapping = build_class_translation_map(classes, translation_config)
+    for annot_line in lines:
+        new_annot_line = ''
+        splitted = annot_line.split(' ')
+        img_path = splitted[0].strip()
+        new_annot_line += img_path
+        for bbox in splitted[1:]:
+            x_min, y_min, x_max, y_max, class_id = list(map(int, bbox.split(',')))
+            new_class_id = class_mapping[int(class_id)]
+            if new_class_id >= 0: #check if we need to discard this bbox according to translation config.
+                new_annot_line += ' {},{},{},{},{}'.format(x_min, y_min, x_max, y_max, new_class_id)
+        new_lines.append(new_annot_line)
+    return new_lines
+
+def get_classes(classes_path):
+    '''loads the classes'''
+    with open(classes_path) as f:
+        class_names = f.readlines()
+        class_names = [c.strip() for c in class_names]
+        return class_names
+
+def calc_annot_lines_md5(lines_array):
+    hash = hashlib.md5()
+    for line in lines_array:
+        hash.update(line.strip().encode('utf-8'))
+    return hash.hexdigest()

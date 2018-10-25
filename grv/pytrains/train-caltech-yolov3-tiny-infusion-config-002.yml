@@ -1,0 +1,19 @@
+dataset_name: caltech
+train_path: train_caltech10x_42782imgs_v20181024211330_keras.txt
+test_path: test_caltech_4024imgs_v20181024211330_keras.txt
+classes_path: model_data/caltech_classes.txt
+# anchors_path: model_data/tiny_yolo_anchors.txt
+anchors_path: model_data/yolo_anchors_k3.txt
+pretrained_weights_path: model_data/yolov3-tiny.h5
+log_dir: logs/caltech_seg-002
+model_name: tiny_yolo_infusion
+seg_loss_weight: 2
+input_width: 640
+input_height: 480
+pretrained_weights_path: model_data/yolov3-tiny.h5
+epochs_freezed: 0
+batch_size_freezed: 2
+epochs_unfreezed: 100
+batch_size_unfreezed: 2
+data_augmentation: flip_only
+short_comment: increasing_seg_loss_weight

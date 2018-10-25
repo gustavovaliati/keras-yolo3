@@ -1,0 +1,11 @@
+#Discard body-part, head, top-view
+#Merge others
+#current_class: new_class
+person-no-ocl: person-no-ocl
+person-normal-ocl: person-no-ocl
+person-severe-ocl: person-no-ocl
+person-angled: person-no-ocl
+person-head: discard
+person-body-part: discard
+person-top-view: discard
+person-far: person-no-ocl

@@ -17,6 +17,11 @@ ap.add_argument("-t", "--txt_data_path",
                 type=str,
                 help=   "The txt file normally used in obj.data as train or valid."
                         " Good for when you need to create separated files.")
+ap.add_argument("-e", "--min_height",
+                required = False,
+                default=0,
+                type=int,
+                help = "Discard any bbox bellow the min height.")
 
 ARGS = ap.parse_args()
 
@@ -51,14 +56,13 @@ Box format: x_min,y_min,x_max,y_max,class_id (no space).
 '''
 IMG_WIDTH = 640
 IMG_HEIGHT = 480
+
+discarded_by_insuficient_height = 0
 with open(output_filename, 'w') as train_f:
     print('We have found {} images.'.format(len(img_list)))
     for img_file_path in tqdm(img_list):
         img_file_path = img_file_path.replace('\n','')
         annot_file_path = img_file_path.replace('.jpg', '.txt')
-        stop = False
-        if img_file_path == '/home/gustavo/workspace/mestrado/bbox-grv_transport/Images/001/C_BIBT-16/17/12/11/14/00/12/00163-capture.jpg':
-            stop = True
         train_f.write(img_file_path)
         with open(annot_file_path, 'r') as annot_f:
             for annot in annot_f:
@@ -81,10 +85,18 @@ with open(output_filename, 'w') as train_f:
                 if y_max >= IMG_HEIGHT:
                     y_max = IMG_HEIGHT - 1
 
-                if stop:
-                    print(an)
-                    print(x_center, y_center, w, h, x_min, y_min, x_max, y_max)
+                if x_max == x_min or y_max == y_min:
+                    print('Discarding:',img_file_path, x_min, y_min, x_max, y_max, class_id)
+                    continue
+
+                if y_max - y_min < ARGS.min_height:
+                    discarded_by_insuficient_height += 1
+                    continue
 
                 train_f.write(' {},{},{},{},{}'.format(x_min, y_min, x_max, y_max, class_id))
         train_f.write('\n')
+
+if discarded_by_insuficient_height > 0:
+    print('{} bboxes have been discarded due insuficient height which minimum has been set to {}'.format(discarded_by_insuficient_height,ARGS.min_height))
+
 print('The outputfile is', output_filename)

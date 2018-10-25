@@ -1,0 +1,13 @@
+#Merge occlusions and angled in person-normal-ocl;
+#Merge head, body-part, topview in person-body-part;
+#Discard person-far;
+
+#current_class: new_class
+person-no-ocl: person-no-ocl
+person-normal-ocl: person-normal-ocl
+person-severe-ocl: person-normal-ocl
+person-angled: person-normal-ocl
+person-head: person-body-part
+person-body-part: person-body-part
+person-top-view: person-body-part
+person-far: discard

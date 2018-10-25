@@ -1,0 +1,10 @@
+#Translate every class to the default class.
+#current_class: new_class
+person-no-ocl: person-no-ocl
+person-normal-ocl: person-no-ocl
+person-severe-ocl: person-no-ocl
+person-head: person-no-ocl
+person-body-part: person-no-ocl
+person-top-view: person-no-ocl
+person-angled: person-no-ocl
+person-far: person-no-ocl

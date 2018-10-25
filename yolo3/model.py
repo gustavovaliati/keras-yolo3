@@ -71,7 +71,8 @@ def make_last_layers(x, num_filters, out_filters):
 
 def yolo_infusion_body(inputs, num_anchors, num_classes):
     '''Create YOLO_v3 model CNN body in keras, using a weak segmentation infusion layer.'''
-    model_body = yolo_body_for_small_objs(inputs, num_anchors, num_classes)
+    # model_body = yolo_body_for_small_objs(inputs, num_anchors, num_classes)
+    model_body = yolo_body(inputs, num_anchors, num_classes)
     connection_layer = model_body.get_layer(name='leaky_re_lu_52')
     y_seg = infusion_layer(connection_layer.output)
 
