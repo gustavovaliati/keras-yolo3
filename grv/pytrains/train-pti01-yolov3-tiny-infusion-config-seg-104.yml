@@ -1,0 +1,17 @@
+dataset_name: pti01
+train_path: train_pti01_v20181005161459_keras_discarded-3.txt
+test_path: test_pti01_v20181005161459_only-C_ED4A-03_C_ED4A-02_C_BLC03-08_keras.txt
+classes_path: model_data/pti_classes.txt
+anchors_path: model_data/yolo_anchors_k2.txt
+model_name: tiny_yolo_infusion
+seg_loss_weight: 2.0
+input_width: 640
+input_height: 480
+pretrained_weights_path: model_data/yolov3-tiny.h5
+log_dir: logs/seg-104
+epochs_freezed: 0
+batch_size_freezed: 2
+epochs_unfreezed: 15
+batch_size_unfreezed: 2
+data_augmentation: flip_only
+short_comment: final_experiments_1

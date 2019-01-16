@@ -9,7 +9,7 @@ pretrained_weights_path: model_data/yolov3-tiny.h5
 log_dir: logs/caltech_default-001
 input_width: 640
 input_height: 480
-epochs_freezed: 0
+epochs_freezed: 1
 batch_size_freezed: 2
 epochs_unfreezed: 100
 batch_size_unfreezed: 2

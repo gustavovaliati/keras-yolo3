@@ -5,7 +5,7 @@ classes_path: model_data/caltech_classes.txt
 model_name: yolo_infusion
 seg_loss_weight: 2
 pretrained_weights_path: model_data/yolov3.h5
-log_dir: logs/caltech_yolov3-seg-001
+log_dir: logs/caltech_yolov3-seg-000
 anchors_path: model_data/yolo_anchors_k3.txt
 # anchors_path: model_data/yolo_anchors.txt
 input_width: 640

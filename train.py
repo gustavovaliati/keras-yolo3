@@ -252,7 +252,7 @@ def create_model(input_shape, anchors, num_classes, load_pretrained=True, freeze
                 'num_yolo_heads': num_yolo_heads
             })([*model_body.output, *y_true])
         model = Model([model_body.input, *y_true], outputs=[model_loss, seg_output])
-        print(model.summary())
+        # print(model.summary())
         return model
     elif model_name in ['yolo', 'yolo_small_objs']:
 

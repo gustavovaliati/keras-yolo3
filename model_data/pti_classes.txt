@@ -1,8 +1,1 @@
-person-no-ocl
-person-normal-ocl
-person-severe-ocl
-person-head
-person-body-part
-person-top-view
-person-angled
-person-far
+person

@@ -3,7 +3,7 @@ train_path: train_caltech10x_42782imgs_v20181024211330_keras.txt
 test_path: test_caltech_4024imgs_v20181024211330_keras.txt
 classes_path: model_data/caltech_classes.txt
 # anchors_path: model_data/tiny_yolo_anchors.txt
-anchors_path: model_data/yolo_anchors_k3.txt
+anchors_path: model_data/yolo_anchors_k2.txt
 pretrained_weights_path: model_data/yolov3-tiny.h5
 log_dir: logs/caltech_seg-002
 model_name: tiny_yolo_infusion

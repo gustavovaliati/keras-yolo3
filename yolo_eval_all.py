@@ -15,7 +15,7 @@ import math
 import tensorflow as tf
 from keras.backend.tensorflow_backend import set_session
 config = tf.ConfigProto()
-config.gpu_options.per_process_gpu_memory_fraction = 0.45
+config.gpu_options.per_process_gpu_memory_fraction = 0.3
 set_session(tf.Session(config=config))
 
 import numpy as np
@@ -52,6 +52,16 @@ ap.add_argument("-e", "--only_epochs_above",
                 default=None,
                 type=int,
                 help="Evaluate only epochs with its number above the specified integer. Otherwise, evaluate all weights")
+ap.add_argument("-s", "--score_threshold",
+                required=False,
+                default=0.3,
+                type=float,
+                help="Minimum confidence for the predictions.")
+ap.add_argument("-i", "--iou_threshold",
+                required=False,
+                default=0.45,
+                type=float,
+                help="IoU threshold for the NMS.")
 ap.add_argument("-a", "--generate_all",
                 required=False,
                 action='store_true',
@@ -86,8 +96,8 @@ class YOLO(object):
         self.classes_path = train_config['classes_path']
         # self.classes_path = 'model_data/coco_classes.txt'
         self.anchors_path = train_config['anchors_path']
-        self.score = 0.3
-        self.iou = 0.45
+        self.score = ARGS.score_threshold
+        self.iou = ARGS.iou_threshold
         self.class_names = self._get_class()
         self.num_yolo_heads = 3 if self.model_name in ['yolo', 'yolo_infusion'] else 2
         self.anchors = self._get_anchors()
@@ -225,16 +235,16 @@ class YOLO(object):
 
             if draw:
                 label = '{} {:.2f}'.format(predicted_class, score)
-                draw = ImageDraw.Draw(image)
-                label_size = draw.textsize(label, font)
+                imdraw = ImageDraw.Draw(image)
+                label_size = imdraw.textsize(label, font)
 
             top, left, bottom, right = box
             top = max(0, np.floor(top + 0.5).astype('int32'))
             left = max(0, np.floor(left + 0.5).astype('int32'))
             bottom = min(image.size[1], np.floor(bottom + 0.5).astype('int32'))
             right = min(image.size[0], np.floor(right + 0.5).astype('int32'))
-            if verbose:
-                print(label, (left, top), (right, bottom))
+            # if verbose:
+            #     print(label, (left, top), (right, bottom))
 
             if draw:
                 if top - label_size[1] >= 0:
@@ -244,23 +254,24 @@ class YOLO(object):
 
                     # My kingdom for a good redistributable image drawing library.
                 for i in range(thickness):
-                    draw.rectangle(
+                    imdraw.rectangle(
                         [left + i, top + i, right - i, bottom - i],
                         outline=self.colors[c])
-                draw.rectangle(
+                imdraw.rectangle(
                     [tuple(text_origin), tuple(text_origin + label_size)],
                     fill=self.colors[c])
-                draw.text(text_origin, label, fill=(0, 0, 0), font=font)
-                del draw
+                imdraw.text(text_origin, label, fill=(0, 0, 0), font=font)
+                del imdraw
 
             # <left> <top> <right> <bottom> <class_id> <confidence>
             detections.append([left, top, right, bottom, c, score])
 
         end = timer()
+        execution_time = end - start
         if verbose:
-            print('Executed in: ', end - start)
+            print('Executed in: ', execution_time)
 
-        return image, detections
+        return image, detections, execution_time
 
     def close_session(self):
         self.sess.close()
@@ -360,7 +371,9 @@ def detect_img(yolo,output_path,test_path):
     result_images = []
 
     test_annotations = test_path
+    number_of_images = 0
     with open(test_annotations,'r') as annot_f:
+            total_execution_time = 0
             for annotation in tqdm(annot_f):
                 try:
                     # print(annotation)
@@ -372,11 +385,14 @@ def detect_img(yolo,output_path,test_path):
                     print('Error while opening file.', e)
                     break;
                 else:
-                    r_image, detections = yolo.detect_image(image)
+                    r_image, detections, execution_time = yolo.detect_image(image)
+                    total_execution_time += execution_time
+                    number_of_images += 1
                     result_images.append(r_image.filename)
                     result_detections.append(detections)
                     # r_image.show()
                     # r_image.save('img_seg_test.jpg')
+    print("Prediciton time: Nr Images={}; Total={}; Seconds per image={};".format(number_of_images, total_execution_time, total_execution_time / number_of_images))
 
     if ARGS.canonical_bboxes:
         result_detections = get_canonical_bboxes(result_detections, img_width=image.width, img_height=image.height)
@@ -494,13 +510,15 @@ if __name__ == '__main__':
 
 
         #infer_logdir_epochs_dataset_outputversion
-        output_path = 'infer_{}_{}_{}_{}_{}_{}'.format(
+        output_path = 'infer_{}_{}_{}_{}_{}_{}_iou-{}_score-{}'.format(
             train_config['log_dir'].replace('/',''),
             os.path.basename(weight).split('-')[0], #[ep022]-loss5.235-val_loss5.453.h5
             train_config['dataset_name'],
             train_config['model_name'],
             train_config['short_comment'] if train_config['short_comment'] else '',
             ARGS.continue_version if ARGS.continue_version else output_version,
+            ARGS.iou_threshold,
+            ARGS.score_threshold
             )
 
         if ((train_config['dataset_name'] == 'pti01' and os.path.exists(output_path + '.txt')) or

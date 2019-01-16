@@ -1,0 +1,19 @@
+dataset_name: caltech
+train_path: train_shanshan_1x_keras.txt
+test_path: test_shanshan_1x_keras.txt
+classes_path: model_data/caltech_classes.txt
+model_name: yolo_infusion
+seg_loss_weight: 0.2
+initial_lr: 0.00005
+pretrained_weights_path: model_data/yolov3.h5
+log_dir: logs/caltech_yolov3-seg-022
+anchors_path: model_data/yolo_anchors_k3.txt
+# anchors_path: model_data/yolo_anchors.txt
+input_width: 640
+input_height: 480
+epochs_freezed: 1
+batch_size_freezed: 2
+epochs_unfreezed: 30
+batch_size_unfreezed: 2
+data_augmentation: flip_only
+short_comment: comparing_seg_loss_weights_diff_lr

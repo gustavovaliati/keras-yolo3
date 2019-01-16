@@ -1,0 +1,17 @@
+dataset_name: caltech
+train_path: train_caltech10x_42782imgs_v20181024211330_keras.txt
+test_path: test_caltech_4024imgs_v20181024211330_keras.txt
+classes_path: model_data/caltech_classes.txt
+anchors_path: model_data/yolo_anchors_k2.txt
+# anchors_path: model_data/tiny_yolo_anchors.txt
+model_name: tiny_yolo
+pretrained_weights_path: model_data/yolov3-tiny.h5
+log_dir: logs/caltech_default-004
+input_width: 640
+input_height: 480
+epochs_freezed: 1
+batch_size_freezed: 2
+epochs_unfreezed: 100
+batch_size_unfreezed: 2
+data_augmentation: full
+short_comment: tiny-caltech-full-data-aug
