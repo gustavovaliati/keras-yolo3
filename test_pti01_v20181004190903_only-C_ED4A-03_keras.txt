@@ -1,0 +1,200 @@
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00080-capture.jpg 474,28,505,101,0 551,47,586,126,0 408,26,450,113,0 433,41,483,133,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00038-capture.jpg 107,77,195,285,0 316,89,391,253,0 321,148,435,402,0 141,285,306,479,0 343,345,496,479,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00037-capture.jpg 94,92,155,294,0 324,61,390,245,0 159,134,243,338,0 146,72,209,175,0 222,89,302,290,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00012-capture.jpg
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00088-capture.jpg 560,48,593,124,0 458,26,488,111,0 539,45,558,134,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00051-capture.jpg 100,228,244,479,0 363,95,450,319,0 177,120,270,348,0 227,185,339,436,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00029-capture.jpg 92,202,233,479,0 397,232,531,479,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00066-capture.jpg 354,13,382,57,0 433,32,484,121,0 355,21,389,109,0 281,28,315,136,0 315,9,355,148,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00019-capture.jpg 147,39,195,165,0 307,20,346,140,0 193,40,234,170,0 235,25,263,127,0 241,35,288,159,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00038-capture.jpg 96,92,155,292,0 330,65,399,263,0 156,152,247,387,0 145,76,215,191,0 228,94,304,304,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00023-capture.jpg 114,53,165,194,0 283,27,334,153,0 167,53,232,192,0 207,29,243,148,0 232,44,283,174,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00017-capture.jpg 157,34,202,151,0 312,20,361,137,0 197,38,232,158,0 241,21,283,125,0 244,30,298,150,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00030-capture.jpg 82,172,223,464,0 388,201,510,479,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00052-capture.jpg 226,20,267,136,0 304,31,342,113,0 268,41,322,186,0 191,66,258,235,0 303,81,363,264,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00087-capture.jpg 562,48,597,127,0 535,52,556,128,0 457,28,482,110,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00006-capture.jpg
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00081-capture.jpg 484,24,505,99,0 554,50,589,126,0 421,25,453,115,0 443,42,483,130,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00068-capture.jpg 375,13,401,62,0 462,34,498,120,0 387,22,413,118,0 291,26,334,134,0 320,15,366,144,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00039-capture.jpg 122,68,190,270,0 312,77,379,234,0 309,139,421,395,0 143,249,293,479,0 334,304,472,479,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00064-capture.jpg 374,304,538,479,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00053-capture.jpg 112,286,272,479,0 180,147,275,351,0 248,229,371,470,0 367,103,464,319,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00059-capture.jpg 157,290,299,479,0 376,176,488,450,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00011-capture.jpg
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00007-capture.jpg 210,22,250,125,0 398,22,443,123,0 258,27,296,126,0 309,21,359,111,0 306,24,350,131,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00009-capture.jpg 200,22,239,128,0 383,19,427,121,0 229,26,280,131,0 309,19,342,112,0 296,25,342,132,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00034-capture.jpg 92,108,177,344,0 341,125,436,350,0 378,251,529,479,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00057-capture.jpg 270,18,296,114,0 348,24,378,106,0 276,28,319,152,0 212,53,268,190,0 291,57,345,205,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00063-capture.jpg 310,7,354,61,0 401,27,453,121,0 305,11,363,126,0 251,33,296,151,0 296,33,350,164,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00058-capture.jpg 173,253,305,479,0 362,156,473,387,0 356,447,492,477,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00098-capture.jpg
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00085-capture.jpg
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00013-capture.jpg 184,26,215,132,0 360,21,392,127,0 209,34,252,146,0 273,18,313,115,0 281,28,311,141,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00033-capture.jpg 86,124,183,391,0 353,140,449,387,0 394,297,560,479,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00034-capture.jpg 82,102,156,299,0 311,53,380,237,0 154,101,225,290,0 146,62,206,144,0 229,72,304,266,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00019-capture.jpg
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00070-capture.jpg 387,15,422,93,0 409,26,434,107,0 297,23,347,124,0 331,34,386,138,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00075-capture.jpg 438,19,470,103,0 540,46,560,126,0 445,34,497,122,0 364,24,399,117,0 393,32,429,129,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00094-capture.jpg
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00025-capture.jpg 102,60,158,216,0 283,31,330,168,0 171,55,226,195,0 200,35,237,142,0 233,48,280,191,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00100-capture.jpg
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00087-capture.jpg
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00074-capture.jpg 429,18,462,101,0 446,30,481,121,0 357,23,389,118,0 384,34,429,128,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00095-capture.jpg
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00082-capture.jpg 485,30,506,96,0 559,51,594,127,0 423,27,462,113,0 454,42,491,132,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00076-capture.jpg 439,22,480,107,0 543,45,571,127,0 465,32,500,122,0 369,26,410,124,0 396,33,443,132,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00018-capture.jpg 152,38,197,162,0 312,21,351,136,0 197,40,233,159,0 239,23,264,127,0 239,34,292,158,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00103-capture.jpg
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00090-capture.jpg
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00077-capture.jpg 448,22,489,103,0 541,47,580,128,0 471,37,503,124,0 372,26,420,117,0 399,37,451,132,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00010-capture.jpg
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00084-capture.jpg 567,52,600,125,0 445,32,477,112,0 465,49,501,125,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00079-capture.jpg
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00078-capture.jpg
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00027-capture.jpg 90,72,154,245,0 287,35,340,180,0 159,67,222,213,0 184,43,225,157,0 229,50,298,194,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00035-capture.jpg 95,103,177,344,0 332,118,421,348,0 374,210,506,475,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00049-capture.jpg 197,27,238,117,0 299,36,341,115,0 268,54,330,216,0 186,84,262,272,0 307,102,380,309,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00047-capture.jpg 179,35,233,116,0 287,40,340,108,0 276,65,342,227,0 173,105,263,320,0 307,119,394,323,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00003-capture.jpg
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00059-capture.jpg 288,12,320,73,0 367,22,402,125,0 269,15,333,144,0 225,47,273,182,0 296,49,345,184,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00021-capture.jpg
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00022-capture.jpg
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00024-capture.jpg
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00056-capture.jpg 256,18,290,122,0 336,28,375,96,0 272,33,316,163,0 209,53,267,203,0 293,59,349,206,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00024-capture.jpg 106,58,162,209,0 282,29,330,164,0 169,55,228,196,0 202,35,239,151,0 227,45,282,179,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00077-capture.jpg
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00056-capture.jpg 173,191,295,465,0 271,344,426,478,0 363,135,469,359,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00001-capture.jpg 282,21,319,126,0 318,22,346,113,0 368,27,407,127,0 450,26,490,118,0 390,20,409,64,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00048-capture.jpg 89,161,200,426,0 375,93,449,320,0 159,99,258,299,0 238,144,336,389,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00046-capture.jpg 90,131,185,357,0 351,88,436,321,0 128,387,277,479,0 171,91,232,297,0 230,118,323,341,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00017-capture.jpg
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00051-capture.jpg 219,25,259,136,0 303,32,340,107,0 267,46,328,207,0 189,70,258,259,0 304,87,368,273,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00005-capture.jpg
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00091-capture.jpg
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00045-capture.jpg 162,40,216,176,0 288,46,342,124,0 281,78,359,284,0 169,123,262,366,0 306,150,397,384,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00080-capture.jpg
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00042-capture.jpg 142,52,205,226,0 297,59,359,183,0 299,101,379,289,0 154,171,265,444,0 321,203,436,461,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00003-capture.jpg 263,25,298,127,0 435,24,475,117,0 291,20,326,114,0 366,18,393,76,0 350,24,387,96,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00101-capture.jpg
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00090-capture.jpg 560,46,591,123,0 461,29,494,111,0 537,50,559,135,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00054-capture.jpg 242,21,280,122,0 318,24,363,88,0 266,36,318,176,0 203,63,262,220,0 295,69,360,235,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00014-capture.jpg
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00089-capture.jpg
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00050-capture.jpg 204,28,247,109,0 301,35,339,111,0 266,52,327,217,0 186,81,262,268,0 302,90,375,275,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00092-capture.jpg
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00084-capture.jpg
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00062-capture.jpg 372,235,525,478,0 184,451,300,478,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00033-capture.jpg 75,99,153,302,0 305,50,374,213,0 155,97,220,290,0 157,63,209,142,0 230,70,300,241,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00046-capture.jpg 172,35,226,147,0 286,45,342,111,0 276,70,349,250,0 168,111,262,323,0 311,134,394,370,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00008-capture.jpg 201,22,245,128,0 397,20,436,122,0 240,26,290,129,0 307,17,357,114,0 297,26,346,131,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00072-capture.jpg 405,14,443,99,0 421,30,471,123,0 339,25,371,117,0 367,35,394,100,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00009-capture.jpg
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00075-capture.jpg
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00022-capture.jpg 126,51,182,192,0 287,23,335,151,0 165,48,230,175,0 210,31,246,141,0 234,40,284,173,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00082-capture.jpg
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00035-capture.jpg 89,99,156,301,0 316,57,382,244,0 154,116,240,323,0 142,66,208,169,0 229,82,304,279,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00026-capture.jpg 88,336,233,478,0 473,354,622,479,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00050-capture.jpg 87,196,216,439,0 173,112,260,315,0 366,94,447,319,0 226,168,337,403,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00008-capture.jpg
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00060-capture.jpg 287,14,331,73,0 373,23,420,125,0 269,16,334,112,0 234,43,280,168,0 295,47,343,181,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00044-capture.jpg 155,46,207,195,0 295,54,348,134,0 283,82,362,279,0 165,134,266,373,0 308,158,408,384,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00085-capture.jpg 563,51,600,129,0 446,29,492,112,0 538,53,555,128,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00073-capture.jpg 409,17,451,100,0 435,32,473,119,0 346,25,380,113,0 365,34,416,133,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00002-capture.jpg
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00076-capture.jpg
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00007-capture.jpg
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00061-capture.jpg 144,381,306,479,0 374,212,520,467,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00060-capture.jpg 147,330,303,479,0 375,196,509,464,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00045-capture.jpg 88,123,185,343,0 351,84,435,300,0 140,345,273,479,0 172,86,231,296,0 224,114,320,345,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00029-capture.jpg 81,80,150,254,0 284,38,340,193,0 156,76,217,239,0 165,44,222,119,0 231,57,293,213,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00102-capture.jpg
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00004-capture.jpg 249,23,283,130,0 428,23,467,119,0 283,25,317,121,0 357,19,387,71,0 334,23,378,102,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00065-capture.jpg 377,345,544,479,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00097-capture.jpg
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00069-capture.jpg
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00043-capture.jpg 89,106,168,306,0 349,80,432,287,0 140,264,268,479,0 170,84,230,267,0 239,100,306,307,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00081-capture.jpg
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00089-capture.jpg 561,47,592,123,0 458,28,493,110,0 539,47,559,131,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00071-capture.jpg
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00016-capture.jpg
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00067-capture.jpg 364,12,394,64,0 448,32,489,120,0 373,22,399,119,0 284,29,322,136,0 315,10,355,145,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00061-capture.jpg 293,8,343,69,0 377,26,429,120,0 281,8,344,124,0 235,38,288,164,0 292,46,341,178,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00086-capture.jpg
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00032-capture.jpg 80,139,182,416,0 355,159,471,407,0 483,350,585,474,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00026-capture.jpg 95,64,155,230,0 283,31,336,171,0 166,62,224,211,0 191,38,230,155,0 234,50,285,192,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00047-capture.jpg 87,134,192,363,0 358,88,446,322,0 122,437,279,479,0 163,96,243,298,0 238,129,330,344,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00011-capture.jpg 191,25,222,132,0 370,20,410,126,0 219,26,265,139,0 293,20,328,118,0 283,30,322,137,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00088-capture.jpg
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00063-capture.jpg 373,270,533,479,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00053-capture.jpg 233,21,277,127,0 312,29,351,90,0 266,40,320,187,0 196,68,258,235,0 296,73,363,238,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00069-capture.jpg 378,13,413,97,0 464,37,504,121,0 390,23,421,117,0 292,22,340,129,0 335,33,388,136,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00093-capture.jpg 471,32,502,108,0 561,40,585,125,0 546,43,562,132,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00006-capture.jpg 226,26,269,125,0 410,22,450,121,0 268,25,300,123,0 331,20,366,72,0 327,23,358,133,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00099-capture.jpg
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00092-capture.jpg 553,47,588,124,0 469,30,501,108,0 547,43,562,118,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00004-capture.jpg
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00012-capture.jpg 180,26,223,133,0 367,20,398,124,0 213,30,251,138,0 292,16,320,118,0 287,25,316,140,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00058-capture.jpg 271,16,306,115,0 357,23,395,126,0 282,25,324,147,0 218,47,270,183,0 295,54,345,203,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00042-capture.jpg 91,98,160,292,0 351,78,432,287,0 142,243,257,478,0 165,84,228,267,0 247,98,308,307,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00073-capture.jpg
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00079-capture.jpg 467,25,500,105,0 551,47,582,127,0 397,25,440,118,0 431,40,473,132,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00001-capture.jpg
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00015-capture.jpg
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00031-capture.jpg 77,88,152,283,0 294,45,350,211,0 162,79,227,248,0 162,50,215,121,0 229,60,289,232,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00023-capture.jpg
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00028-capture.jpg 96,227,233,479,0 402,264,557,479,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00093-capture.jpg
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00083-capture.jpg
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00036-capture.jpg 90,95,154,303,0 317,57,385,245,0 159,128,239,340,0 142,69,210,177,0 224,84,305,278,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00020-capture.jpg
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00044-capture.jpg 88,112,168,303,0 351,80,432,289,0 139,297,273,479,0 171,83,234,287,0 228,106,312,331,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00037-capture.jpg 97,81,182,287,0 324,92,403,290,0 347,169,450,434,0 134,343,292,479,0 421,410,512,479,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00031-capture.jpg 77,151,193,417,0 370,173,493,421,0 549,416,638,479,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00014-capture.jpg 176,27,214,133,0 337,20,382,134,0 205,37,244,148,0 261,20,311,121,0 264,29,311,143,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00078-capture.jpg 464,22,498,106,0 549,47,580,125,0 393,24,433,117,0 413,37,458,132,0 477,71,499,120,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00071-capture.jpg 400,15,432,98,0 415,25,451,91,0 315,26,358,122,0 336,35,384,132,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00048-capture.jpg 187,31,237,129,0 289,36,339,105,0 272,60,335,234,0 182,95,263,308,0 307,110,388,321,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00083-capture.jpg 567,52,599,128,0 427,28,469,115,0 453,46,501,126,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00062-capture.jpg 302,7,344,50,0 401,26,432,117,0 301,13,352,122,0 240,35,294,163,0 294,41,340,163,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00055-capture.jpg 250,18,285,124,0 325,28,373,100,0 269,33,318,163,0 204,54,265,205,0 295,68,353,230,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00027-capture.jpg 93,272,231,479,0 406,314,585,479,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00091-capture.jpg 554,48,589,124,0 532,52,567,129,0 465,32,499,116,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00068-capture.jpg
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00039-capture.jpg 94,91,156,287,0 334,68,413,269,0 153,169,245,406,0 148,82,221,196,0 231,96,311,308,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00041-capture.jpg 100,89,147,289,0 353,74,428,267,0 141,212,251,466,0 162,86,219,246,0 243,97,313,305,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00065-capture.jpg 334,12,380,56,0 427,30,469,121,0 339,22,384,119,0 264,34,309,143,0 303,15,343,154,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00013-capture.jpg
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00032-capture.jpg 76,94,151,300,0 299,47,360,214,0 161,88,224,273,0 162,54,215,126,0 229,64,292,241,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00028-capture.jpg 85,75,149,249,0 286,38,337,193,0 155,68,219,220,0 179,42,221,149,0 232,54,297,207,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00086-capture.jpg 561,49,599,127,0 450,27,487,113,0 541,51,557,128,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00041-capture.jpg 137,60,201,238,0 297,67,363,196,0 306,108,393,320,0 145,189,267,451,0 326,223,451,467,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00055-capture.jpg 115,406,277,479,0 262,303,426,479,0 367,118,470,327,0 168,173,296,444,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00036-capture.jpg 95,93,174,324,0 327,102,411,327,0 345,192,472,464,0 135,417,230,479,0 483,473,530,478,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00105-capture.jpg
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00016-capture.jpg 162,32,207,147,0 322,19,368,135,0 194,37,231,156,0 250,20,290,116,0 255,30,301,146,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00104-capture.jpg
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00040-capture.jpg 130,60,195,231,0 303,72,371,204,0 306,118,405,358,0 140,214,281,479,0 334,261,459,479,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00067-capture.jpg
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00025-capture.jpg 81,401,242,479,0 577,402,639,478,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00049-capture.jpg 90,178,205,440,0 364,94,446,319,0 170,109,257,329,0 231,157,330,406,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00005-capture.jpg 229,26,280,127,0 425,23,459,121,0 269,23,308,122,0 344,18,377,71,0 326,24,370,131,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00072-capture.jpg
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00010-capture.jpg 194,22,228,131,0 374,22,417,124,0 222,30,274,138,0 294,19,332,115,0 289,24,330,135,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00066-capture.jpg 383,403,551,479,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00018-capture.jpg
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00106-capture.jpg
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00057-capture.jpg 175,213,303,464,0 360,145,467,387,0 280,390,446,479,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00043-capture.jpg 149,47,203,202,0 297,55,354,147,0 289,88,370,289,0 162,147,269,393,0 315,182,417,442,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/54/47/00064-capture.jpg 320,8,369,70,0 407,28,455,121,0 307,15,376,125,0 260,34,305,147,0 299,14,341,161,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00107-capture.jpg
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00021-capture.jpg 139,47,183,181,0 294,25,339,152,0 176,47,230,174,0 218,28,253,137,0 236,38,288,166,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00030-capture.jpg 80,88,151,279,0 287,41,343,196,0 162,79,221,247,0 164,48,221,129,0 227,59,293,215,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00040-capture.jpg 99,88,153,286,0 341,71,423,269,0 141,184,244,407,0 150,82,223,217,0 233,98,321,306,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00070-capture.jpg
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00052-capture.jpg 110,253,247,479,0 367,99,455,319,0 241,210,346,468,0 183,137,277,370,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00002-capture.jpg 268,25,318,128,0 304,26,343,109,0 357,28,405,127,0 378,20,400,67,0 446,25,483,116,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00096-capture.jpg
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00074-capture.jpg
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00054-capture.jpg 113,350,281,479,0 247,259,404,479,0 174,154,290,396,0 370,108,467,320,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00015-capture.jpg 172,33,208,142,0 336,19,371,129,0 201,35,231,156,0 260,21,308,116,0 263,30,307,144,0
+/home/grvaliati/workspace/datasets/pti/PTI01_v2/C_ED4A-03/192/18/01/08/16/51/57/00020-capture.jpg 141,40,190,166,0 291,21,342,143,0 185,43,230,175,0 226,27,260,130,0 240,37,287,160,0

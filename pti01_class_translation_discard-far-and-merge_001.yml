@@ -1,3 +1,4 @@
+#This merging had been planned before any other clue, so does not make much sense
 #Merge occlusions and angled in person-normal-ocl;
 #Merge head, body-part, topview in person-body-part;
 #Discard person-far;

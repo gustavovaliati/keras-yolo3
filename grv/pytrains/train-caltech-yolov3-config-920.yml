@@ -1,0 +1,16 @@
+dataset_name: caltech
+train_path: train_shanshan_1x_keras.txt
+test_path: test_caltech_4024imgs_v20181024211330_keras.txt
+classes_path: model_data/caltech_classes.txt
+model_name: yolo
+pretrained_weights_path: model_data/yolov3.h5
+log_dir: logs/caltech_yolov3-020 #yah this is wrong on purpose. This config was built for inference only, not training.
+anchors_path: model_data/yolo_shanshan_anchors_k3.txt
+input_width: 640
+input_height: 480
+epochs_freezed: 1
+batch_size_freezed: 2
+epochs_unfreezed: 10
+batch_size_unfreezed: 2
+data_augmentation: flip_only
+short_comment: changing_test_set_from_020

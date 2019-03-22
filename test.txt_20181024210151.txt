@@ -1,0 +1,1 @@
+/media/gustavo/GRV/datasets/CaltechPedestrians/parsers/caltech-pedestrian-dataset-to-yolo-format-converter/images/set06_V000_29.jpg
